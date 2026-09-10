@@ -1,0 +1,10 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node / Logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

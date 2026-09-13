@@ -303,16 +303,19 @@ html, body {
 }
 
 .screen-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   z-index: 100;
   display: none;
   align-items: center;
   justify-content: center;
   padding: 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: radial-gradient(circle at center, rgba(12, 22, 18, 0.75), rgba(4, 8, 7, 0.95));
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -333,14 +336,46 @@ html, body {
   display: flex !important;
 }
 
+#screen-start {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
 .modal-card {
   max-width: 620px;
   width: 100%;
   padding: 36px 40px;
   text-align: center;
   animation: modalScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  max-height: 92vh;
+  max-height: calc(100dvh - 32px);
+  max-height: calc(100vh - 32px);
+  max-height: 90vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  margin: auto;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-gold) rgba(0, 0, 0, 0.2);
+}
+
+.modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-card::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.modal-card::-webkit-scrollbar-thumb {
+  background: var(--primary-gold);
+  border-radius: 6px;
+}
+
+.modal-card::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-amber);
 }
 
 @keyframes modalScaleIn {
@@ -679,6 +714,15 @@ html, body {
   margin-bottom: 8px;
 }
 
+.modal-title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 30px;
+  font-weight: 900;
+  color: #FFB300;
+  text-shadow: 0 2px 20px rgba(255, 179, 0, 0.5);
+  margin-bottom: 8px;
+}
+
 .modal-sub {
   font-size: 14px;
   color: var(--text-muted);
@@ -743,7 +787,15 @@ html, body {
   100% { transform: translateY(-4px); }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .screen-overlay {
+    padding: 12px 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hud-layer {
+    padding: 14px 16px;
+  }
   .hud-controls-corner {
     top: 14px;
     right: 14px;
@@ -759,37 +811,348 @@ html, body {
     width: 17px;
     height: 17px;
   }
-  .modal-card {
-    padding: 24px 18px;
-  }
-  .game-title {
-    font-size: 32px;
-  }
-  .game-subtitle {
-    font-size: 14px;
-  }
-  .controls-guide-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
   .hud-top-bar {
     gap: 8px;
   }
   .hud-card {
-    padding: 8px 12px;
-    min-width: 90px;
+    padding: 6px 12px;
+    min-width: 85px;
   }
   .hud-value {
     font-size: 18px;
   }
   .hud-label {
     font-size: 9px;
+    letter-spacing: 1px;
+  }
+  .hud-unit {
+    font-size: 11px;
+  }
+  .milestone-toast {
+    top: 75px;
   }
   .milestone-card {
-    min-width: 260px;
-    padding: 12px 20px;
+    min-width: 250px;
+    padding: 10px 18px;
+    gap: 6px;
+  }
+  .milestone-tag {
+    font-size: 9.5px;
+    padding: 3px 10px;
   }
   .milestone-msg {
-    font-size: 16px;
+    font-size: 15px;
+  }
+  #screen-start {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-card {
+    max-width: 96%;
+    max-height: calc(100dvh - 24px);
+    max-height: calc(100vh - 24px);
+    max-height: 94vh;
+    padding: 18px 16px;
+    margin: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .badge-tag {
+    font-size: 9.5px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    margin-bottom: 8px;
+  }
+  .game-title {
+    font-size: 28px;
+    letter-spacing: 1.5px;
+    margin-bottom: 2px;
+  }
+  .game-subtitle {
+    font-size: 12.5px;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  }
+  .game-description {
+    font-size: 11.5px;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+  .controls-guide-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .control-key-card {
+    padding: 8px 4px;
+    gap: 4px;
+    border-radius: 10px;
+  }
+  .key-combo {
+    gap: 3px;
+  }
+  .key-cap {
+    padding: 2px 5px;
+    font-size: 10px;
+    border-bottom: 2px solid #1A202C;
+  }
+  .space-key {
+    padding: 2px 5px;
+    font-size: 8.5px;
+  }
+  .or-txt {
+    font-size: 9px;
+  }
+  .key-desc {
+    font-size: 9.5px;
+  }
+  .legend-row {
+    margin-bottom: 12px;
+    padding: 6px 8px;
+    font-size: 10.5px;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    gap: 4px;
+  }
+  .speed-control-section {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+  .speed-control-label {
+    font-size: 9.5px;
+    letter-spacing: 1.5px;
+  }
+  .speed-toggle-row {
+    gap: 6px;
+  }
+  .speed-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  .default-pill {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+  .speed-dropdown-wrapper {
+    max-width: 220px;
+  }
+  .speed-select-dropdown {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .action-buttons-group {
+    gap: 8px;
+  }
+  .btn-epic-cta {
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 12px;
+    letter-spacing: 1.5px;
+  }
+  .btn-secondary-cta {
+    padding: 10px 20px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+  .quality-toggle-row {
+    margin-top: 10px;
+    font-size: 11px;
+    gap: 6px;
+  }
+  .text-pill-btn {
+    padding: 3px 10px;
+    font-size: 10px;
+  }
+  .game-over-title {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+  .modal-title {
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .modal-sub {
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+  .stats-summary-grid {
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .stat-box {
+    padding: 8px 10px;
+  }
+  .stat-label {
+    font-size: 9px;
+    margin-bottom: 2px;
+  }
+  .stat-value {
+    font-size: 18px;
+  }
+  .stat-value.highlight {
+    font-size: 22px;
+  }
+  .high-score-ribbon {
+    padding: 6px 14px;
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .screen-overlay {
+    padding: 8px 6px;
+  }
+  .modal-card {
+    padding: 14px 12px;
+    max-width: 98%;
+    max-height: calc(100dvh - 16px);
+    max-height: calc(100vh - 16px);
+    max-height: 96vh;
+  }
+  .badge-tag {
+    font-size: 8.5px;
+    padding: 3px 8px;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+  }
+  .game-title {
+    font-size: 24px;
+    letter-spacing: 1px;
+    margin-bottom: 1px;
+  }
+  .game-subtitle {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    margin-bottom: 8px;
+  }
+  .game-description {
+    font-size: 10.5px;
+    line-height: 1.35;
+    margin-bottom: 10px;
+  }
+  .controls-guide-grid {
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .control-key-card {
+    padding: 6px 2px;
+    gap: 3px;
+  }
+  .key-cap {
+    padding: 2px 4px;
+    font-size: 9px;
+  }
+  .space-key {
+    padding: 2px 4px;
+    font-size: 7.5px;
+  }
+  .or-txt {
+    font-size: 8px;
+  }
+  .key-desc {
+    font-size: 8.5px;
+  }
+  .legend-row {
+    font-size: 9.5px;
+    padding: 5px 6px;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .speed-control-section {
+    padding: 6px 8px;
+    margin-bottom: 10px;
+    gap: 5px;
+  }
+  .speed-control-label {
+    font-size: 8.5px;
+  }
+  .speed-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .speed-dropdown-wrapper {
+    max-width: 190px;
+  }
+  .speed-select-dropdown {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+  .btn-epic-cta {
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+  .btn-secondary-cta {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+  .quality-toggle-row {
+    font-size: 10px;
+    margin-top: 8px;
+  }
+  .text-pill-btn {
+    font-size: 9px;
+    padding: 2px 8px;
+  }
+}
+
+@media (max-height: 650px) {
+  .screen-overlay {
+    padding: 6px;
+  }
+  .modal-card {
+    padding: 10px 14px;
+    max-height: calc(100dvh - 12px);
+    max-height: calc(100vh - 12px);
+    max-height: 96vh;
+  }
+  .badge-tag {
+    display: none;
+  }
+  .game-title {
+    font-size: 22px;
+    margin-bottom: 1px;
+  }
+  .game-subtitle {
+    font-size: 10.5px;
+    margin-bottom: 6px;
+  }
+  .game-description {
+    font-size: 10px;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+  .controls-guide-grid {
+    margin-bottom: 6px;
+    gap: 4px;
+  }
+  .control-key-card {
+    padding: 4px 2px;
+  }
+  .legend-row {
+    margin-bottom: 6px;
+    padding: 4px 6px;
+    font-size: 9px;
+  }
+  .speed-control-section {
+    margin-bottom: 8px;
+    padding: 5px 8px;
+    gap: 4px;
+  }
+  .action-buttons-group {
+    gap: 6px;
+  }
+  .btn-epic-cta {
+    padding: 8px 18px;
+    font-size: 13px;
+  }
+  .quality-toggle-row {
+    margin-top: 6px;
+    font-size: 9.5px;
   }
 }

@@ -1,50 +1,43 @@
-/**
- * ============================================================================
- * CHHOTA BHEEM: DHOLAKPUR RUSH 3D
- * ============================================================================
- * An ultra-realistic, highly immersive 3D endless runner built with Three.js & WebGL.
- * Features:
- *  - Procedural Articulated 3D Character Model of Chhota Bheem
- *  - Dynamic Sunset/Twilight Atmospheric Lighting, Soft Shadows, & Fog
- *  - 3-Lane Track Streaming System with Chunk Pooling (Zero Garbage Collection)
- *  - Procedural Web Audio API Sound Synthesizer (Zero External Dependencies)
- *  - Dynamic Camera Follow with Screen Shake, FOV Speed Warp & Physics
- *  - Collectible Golden Motichoor Laddus, Magnet Power-up, & Super Smash Boost
- *  - Dynamic Particle Systems: Swarming Fireflies, Foot Dust, & Smash Debris
- * ============================================================================
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 (function() {
   'use strict';
 
-  // --------------------------------------------------------------------------
-  // GAME CONFIGURATION & CONSTANTS
-  // --------------------------------------------------------------------------
+  
   const CONFIG = {
-    LANE_WIDTH: 2.7,            // Distance between track lanes (Left: -2.7, Center: 0, Right: +2.7)
-    LANES: [-2.7, 0, 2.7],      // X-coordinates for lanes
-    BASE_SPEED: 26.0,           // Base running speed in units/sec
-    MAX_SPEED: 48.0,            // Top running speed as distance increases
-    ACCELERATION: 0.18,         // Speed increase per second
-    JUMP_VELOCITY: 14.5,        // Initial upward velocity on jump
-    GRAVITY: -38.0,             // Downward gravitational acceleration
-    SLIDE_DURATION: 0.85,       // Duration of slide in seconds
-    CHUNK_LENGTH: 45.0,         // Length of each environment track chunk
-    NUM_CHUNKS: 6,              // Active chunks kept in the scene graph
-    MAGNET_DURATION: 9.0,       // Duration of Laddu Magnet power-up
-    BOOST_DURATION: 7.0,        // Duration of Super Laddu Boost power-up
-    MAGNET_RADIUS: 14.0,        // Distance within which laddus are magnetized
-    FOV_NORMAL: 60,             // Normal camera Field of View (degrees)
-    FOV_BOOST: 78,              // High-speed warp FOV during Super Boost
+    LANE_WIDTH: 2.7,            
+    LANES: [-2.7, 0, 2.7],      
+    BASE_SPEED: 14.0,
+    MAX_SPEED_CAP: 20.0,         
+    JUMP_VELOCITY: 14.5,        
+    GRAVITY: -38.0,             
+    SLIDE_DURATION: 0.85,       
+    CHUNK_LENGTH: 45.0,         
+    NUM_CHUNKS: 6,              
+    MAGNET_DURATION: 9.0,       
+    BOOST_DURATION: 7.0,        
+    MAGNET_RADIUS: 14.0,        
+    FOV_NORMAL: 60,             
+    FOV_BOOST: 78,              
   };
 
-  // --------------------------------------------------------------------------
-  // WEB AUDIO API - PROCEDURAL SOUND SYNTHESIZER
-  // --------------------------------------------------------------------------
-  /**
-   * Procedurally synthesizes all sound effects and atmospheric background
-   * using Web Audio API nodes. Ensures 100% offline capability and zero asset latency.
-   */
+  
+
+
   class SoundEngine {
     constructor() {
       this.ctx = null;
@@ -54,7 +47,7 @@
       this.isBgmPlaying = false;
       this.schedulerTimer = null;
       this.currentStep = 0;
-      this.stepDuration = 0.357; // ~84 BPM (0.357s per eighth note)
+      this.stepDuration = 0.357; 
       this.nextNoteTime = 0;
     }
 
@@ -86,7 +79,7 @@
       return this.enabled;
     }
 
-    // Footstep on dirt path (Filtered noise burst + low transient)
+    
     playFootstep() {
       if (!this.enabled || !this.ctx) return;
       const t = this.ctx.currentTime;
@@ -103,7 +96,7 @@
       osc.stop(t + 0.09);
     }
 
-    // Dynamic whoosh jump sound (Rising bandpass noise sweep)
+    
     playJump() {
       if (!this.enabled || !this.ctx) return;
       const t = this.ctx.currentTime;
@@ -120,7 +113,7 @@
       osc.stop(t + 0.26);
     }
 
-    // Slide friction sound (Gravel / dirt skid bandpass noise)
+    
     playSlide() {
       if (!this.enabled || !this.ctx) return;
       const t = this.ctx.currentTime;
@@ -145,14 +138,14 @@
       noise.start(t);
     }
 
-    // Melodic crystal bell chime when collecting golden laddus
+    
     playLadduCollect(pitchMultiplier = 1.0) {
       if (!this.enabled || !this.ctx) return;
       const t = this.ctx.currentTime;
-      const notes = [587.33, 739.99, 880.00, 1046.50, 1174.66]; // D5, F#5, A5, C6, D6
+      const notes = [587.33, 739.99, 880.00, 1046.50, 1174.66]; 
       const baseFreq = notes[Math.floor(Math.random() * notes.length)] * pitchMultiplier;
 
-      // Fundamental harmonic
+      
       const osc1 = this.ctx.createOscillator();
       const gain1 = this.ctx.createGain();
       osc1.type = 'sine';
@@ -164,7 +157,7 @@
       osc1.start(t);
       osc1.stop(t + 0.36);
 
-      // Shimmering overtone
+      
       const osc2 = this.ctx.createOscillator();
       const gain2 = this.ctx.createGain();
       osc2.type = 'triangle';
@@ -177,7 +170,7 @@
       osc2.stop(t + 0.29);
     }
 
-    // Power-up activation fanfare
+    
     playPowerUp() {
       if (!this.enabled || !this.ctx) return;
       const t = this.ctx.currentTime;
@@ -196,11 +189,11 @@
       });
     }
 
-    // Smash obstacle impact (Sub boom + crunch noise)
+    
     playSmash() {
       if (!this.enabled || !this.ctx) return;
       const t = this.ctx.currentTime;
-      // Sub boom
+      
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = 'sine';
@@ -213,7 +206,7 @@
       osc.start(t);
       osc.stop(t + 0.41);
 
-      // Debris crunch
+      
       const bufferSize = this.ctx.sampleRate * 0.2;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -232,7 +225,7 @@
       noise.start(t);
     }
 
-    // Stumble crash (Heavy thud game over)
+    
     playCrash() {
       if (!this.enabled || !this.ctx) return;
       const t = this.ctx.currentTime;
@@ -249,36 +242,32 @@
       osc.stop(t + 0.56);
     }
 
-    // ------------------------------------------------------------------------
-    // PROCEDURAL RELAXING BACKGROUND MUSIC ENGINE (BGM)
-    // ------------------------------------------------------------------------
-    /**
-     * Synthesizes a soft, sweet, relaxing, and playful ambient soundtrack
-     * reminiscent of an Indian cartoon adventure (gentle bamboo flute, warm
-     * marimba/kalimba arpeggios, and soft sunset ambient pad chords).
-     * Loops smoothly with zero clipping, clicks, or harsh frequencies.
-     */
+    
+
+
+
+
     startBGM() {
       if (!this.ctx || this.isBgmPlaying) return;
       this.isBgmPlaying = true;
 
-      // Master BGM submix gain (kept soft and non-distracting)
+      
       this.bgmGain = this.ctx.createGain();
       this.bgmGain.gain.setValueAtTime(0.24, this.ctx.currentTime);
       this.bgmGain.connect(this.masterGain);
 
       this.currentStep = 0;
-      this.stepDuration = 0.357; // ~84 BPM (0.357s per eighth note)
+      this.stepDuration = 0.357; 
       this.nextNoteTime = this.ctx.currentTime + 0.1;
 
-      // High-precision Web Audio lookahead scheduler
+      
       if (this.schedulerTimer) clearInterval(this.schedulerTimer);
       this.schedulerTimer = setInterval(() => {
         this.scheduleBGM();
       }, 50);
     }
 
-    // Backwards compatibility alias
+    
     startForestAmbience() {
       this.startBGM();
     }
@@ -294,14 +283,14 @@
       }
     }
 
-    // Smoothly duck BGM volume during pause or crash
+    
     duckBGM(duck = true) {
       if (!this.bgmGain || !this.ctx) return;
       const targetVol = duck ? 0.08 : 0.24;
       this.bgmGain.gain.setTargetAtTime(targetVol, this.ctx.currentTime, 0.2);
     }
 
-    // Lookahead audio scheduler
+    
     scheduleBGM() {
       if (!this.ctx || !this.isBgmPlaying || !this.enabled) return;
       const scheduleAhead = 0.22;
@@ -312,91 +301,91 @@
       }
     }
 
-    // 64-step musical sequence (8 measures of relaxing, playful melody)
+    
     playBgmStep(step, time) {
-      // 1. Soft Wooden Marimba / Kalimba Arpeggio Pattern
+      
       const marimbaNotes = [
-        // Bar 1: D Major (Pastoral Morning)
+        
         293.66, 369.99, 440.00, 369.99, 587.33, 440.00, 369.99, 440.00,
-        // Bar 2: G Major (Joyful & Playful)
+        
         392.00, 493.88, 587.33, 493.88, 659.25, 587.33, 493.88, 587.33,
-        // Bar 3: B minor / D6 (Warm & Nostalgic)
+        
         369.99, 440.00, 587.33, 739.99, 587.33, 440.00, 369.99, 440.00,
-        // Bar 4: A Major (Sweet Resolution)
+        
         329.63, 440.00, 554.37, 659.25, 440.00, 369.99, 329.63, 369.99,
-        // Bar 5: D Major (Phrase B: Playful Bounce)
+        
         293.66, 440.00, 369.99, 440.00, 587.33, 659.25, 739.99, 587.33,
-        // Bar 6: G Major (Bouncing Sunshine)
+        
         392.00, 493.88, 587.33, 493.88, 587.33, 783.99, 739.99, 587.33,
-        // Bar 7: B minor (Deep Relaxed Warmth)
+        
         246.94, 293.66, 369.99, 440.00, 493.88, 587.33, 493.88, 440.00,
-        // Bar 8: A7 to D Return (Gentle Lullaby Resolution)
+        
         220.00, 277.18, 329.63, 392.00, 440.00, 369.99, 329.63, 277.18
       ];
 
       const mFreq = marimbaNotes[step];
       if (mFreq) {
-        // Vary velocity gently for natural organic expression
+        
         const vel = (step % 2 === 0 ? 0.095 : 0.075);
         this.playMarimba(mFreq, time, this.stepDuration * 0.92, vel);
       }
 
-      // 2. Warm Sunset Ambient Pad Chords (Triggered on measure downbeats)
+      
       const padChords = {
-        0:  [146.83, 220.00, 369.99], // D3, A3, F#4 (D Major)
-        8:  [98.00,  146.83, 246.94], // G2, D3, B3  (G Major)
-        16: [123.47, 185.00, 293.66], // B2, F#3, D4 (B minor)
-        24: [110.00, 164.81, 277.18], // A2, E3, C#4 (A Major)
-        32: [146.83, 220.00, 369.99], // D3, A3, F#4 (D Major)
-        40: [98.00,  146.83, 246.94], // G2, D3, B3  (G Major)
-        48: [123.47, 185.00, 293.66], // B2, F#3, D4 (B minor)
-        56: [110.00, 164.81, 196.00]  // A2, E3, G3  (A7 to D resolution)
+        0:  [146.83, 220.00, 369.99], 
+        8:  [98.00,  146.83, 246.94], 
+        16: [123.47, 185.00, 293.66], 
+        24: [110.00, 164.81, 277.18], 
+        32: [146.83, 220.00, 369.99], 
+        40: [98.00,  146.83, 246.94], 
+        48: [123.47, 185.00, 293.66], 
+        56: [110.00, 164.81, 196.00]  
       };
 
       if (padChords[step]) {
         this.playPadChord(padChords[step], time, this.stepDuration * 8.0, 0.032);
       }
 
-      // 3. Gentle Sweet Bamboo Flute (Bansuri Lead Melody)
+      
       const fluteMelody = {
-        0:  [587.33, 1.9, 0.085], // D5
-        2:  [739.99, 1.9, 0.088], // F#5
-        4:  [659.25, 1.7, 0.082], // E5
-        6:  [587.33, 1.9, 0.085], // D5
+        0:  [587.33, 1.9, 0.085], 
+        2:  [739.99, 1.9, 0.088], 
+        4:  [659.25, 1.7, 0.082], 
+        6:  [587.33, 1.9, 0.085], 
 
-        8:  [493.88, 1.9, 0.080], // B4
-        10: [587.33, 1.9, 0.085], // D5
-        12: [659.25, 3.2, 0.090], // E5
+        8:  [493.88, 1.9, 0.080], 
+        10: [587.33, 1.9, 0.085], 
+        12: [659.25, 3.2, 0.090], 
 
-        16: [739.99, 1.9, 0.090], // F#5
-        18: [880.00, 1.9, 0.094], // A5
-        20: [739.99, 1.9, 0.088], // F#5
-        22: [587.33, 1.9, 0.084], // D5
+        16: [739.99, 1.9, 0.090], 
+        18: [880.00, 1.9, 0.094], 
+        20: [739.99, 1.9, 0.088], 
+        22: [587.33, 1.9, 0.084], 
 
-        24: [659.25, 2.4, 0.084], // E5
-        27: [739.99, 0.9, 0.080], // F#5
-        28: [659.25, 1.9, 0.080], // E5
-        30: [587.33, 1.9, 0.086], // D5
+        24: [659.25, 2.4, 0.084], 
+        27: [739.99, 0.9, 0.080], 
+        28: [659.25, 1.9, 0.080], 
+        30: [587.33, 1.9, 0.086], 
 
-        32: [880.00, 1.7, 0.090], // A5
-        34: [739.99, 1.7, 0.086], // F#5
-        36: [587.33, 1.9, 0.084], // D5
-        38: [659.25, 1.9, 0.085], // E5
+        32: [880.00, 1.7, 0.090], 
+        34: [739.99, 1.7, 0.086], 
+        36: [587.33, 1.9, 0.084], 
+        38: [659.25, 1.9, 0.085], 
 
-        40: [587.33, 1.7, 0.084], // D5
-        42: [659.25, 1.7, 0.086], // E5
-        44: [783.99, 1.9, 0.092], // G5
-        46: [739.99, 1.9, 0.088], // F#5
+        40: [587.33, 1.7, 0.084], 
+        42: [659.25, 1.7, 0.086], 
+        44: [783.99, 1.9, 0.092], 
+        46: [739.99, 1.9, 0.088], 
 
-        48: [659.25, 1.7, 0.084], // E5
-        50: [587.33, 1.7, 0.084], // D5
-        52: [493.88, 1.9, 0.080], // B4
-        54: [440.00, 1.9, 0.078], // A4
+        48: [659.25, 1.7, 0.084], 
+        50: [587.33, 1.7, 0.084], 
+        52: [493.88, 1.9, 0.080], 
+        54: [440.00, 1.9, 0.078], 
 
-        56: [493.88, 1.7, 0.080], // B4
-        58: [440.00, 1.7, 0.078], // A4
-        60: [659.25, 1.9, 0.084], // E5
-        62: [587.33, 1.9, 0.088]  // D5 (Gentle landing on tonic)
+        56: [493.88, 1.7, 0.080], 
+        58: [440.00, 1.7, 0.078], 
+        60: [659.25, 1.9, 0.084], 
+        62: [587.33, 1.9, 0.088]  
       };
 
       if (fluteMelody[step]) {
@@ -405,7 +394,7 @@
       }
     }
 
-    // Soft, rounded wooden marimba mallet pluck
+    
     playMarimba(freq, time, duration = 0.32, velocity = 0.09) {
       if (!this.enabled || !this.ctx || !this.bgmGain) return;
       const osc1 = this.ctx.createOscillator();
@@ -419,7 +408,7 @@
       osc1.type = 'sine';
       osc1.frequency.setValueAtTime(freq, time);
 
-      // Subtle second harmonic for warm wooden texture
+      
       osc2.type = 'triangle';
       osc2.frequency.setValueAtTime(freq * 2.0, time);
 
@@ -438,7 +427,7 @@
       osc2.stop(time + duration + 0.05);
     }
 
-    // Gentle Bamboo Flute (Bansuri) with soft breath envelope & vibrato
+    
     playBambooFlute(freq, time, duration = 0.65, velocity = 0.085) {
       if (!this.enabled || !this.ctx || !this.bgmGain) return;
       const osc = this.ctx.createOscillator();
@@ -446,12 +435,12 @@
       const gain = this.ctx.createGain();
       const filter = this.ctx.createBiquadFilter();
 
-      // Soft lowpass filter for gentle woody flute timbre
+      
       filter.type = 'lowpass';
       filter.frequency.setValueAtTime(1400, time);
       filter.Q.setValueAtTime(1.5, time);
 
-      // Delayed gentle vibrato LFO (swells in naturally)
+      
       const lfo = this.ctx.createOscillator();
       const lfoGain = this.ctx.createGain();
       lfo.frequency.setValueAtTime(4.6, time);
@@ -469,10 +458,10 @@
       triOsc.frequency.setValueAtTime(freq, time);
 
       const triGain = this.ctx.createGain();
-      triGain.gain.setValueAtTime(0.20, time); // Subtle breath overtone
+      triGain.gain.setValueAtTime(0.20, time); 
       triOsc.connect(triGain);
 
-      // Breath envelope: smooth attack & rounded release
+      
       const attack = 0.06;
       const release = 0.15;
       gain.gain.setValueAtTime(0.0001, time);
@@ -495,7 +484,7 @@
       lfo.stop(stopTime);
     }
 
-    // Soft Ambient Pad Chords for harmonious background warmth
+    
     playPadChord(freqs, time, duration = 2.8, velocity = 0.032) {
       if (!this.enabled || !this.ctx || !this.bgmGain) return;
       freqs.forEach(freq => {
@@ -526,23 +515,17 @@
     }
   }
 
-  // --------------------------------------------------------------------------
-  // --------------------------------------------------------------------------
-  // --------------------------------------------------------------------------
-  // AUTHENTIC 2D/3D HYBRID PROCEDURAL FACE SYSTEM FOR CHHOTA BHEEM
-  // --------------------------------------------------------------------------
-  /**
-   * Generates a crystal-clear 1024x1024 procedural CanvasTexture containing
-   * 100% authentic Chhota Bheem facial artwork matching the official turnaround:
-   *  - Large expressive almond cartoon eyes with thick upper lash line and lid crease
-   *  - Rich warm chocolate-brown iris with inner gradient and deep black pupil
-   *  - Dual specular highlight sparkles (anime/cartoon gleam)
-   *  - Gracefully arched chestnut-brown eyebrows with tapered tips
-   *  - Sacred vermilion circular tilak (#C62828) with sandalwood yellow dot accent
-   *  - Stylized cute button nose with soft warm nostril contour
-   *  - Confident, joyful curved smile with cheek dimple accents and rosy lower lip
-   *  - Soft healthy rosy cheek blush on plump boy cheeks
-   */
+  
+
+
+
+
+
+
+
+
+
+
   let cachedChhotaBheemFaceTexture = null;
   function createChhotaBheemFaceTexture() {
     if (cachedChhotaBheemFaceTexture) return cachedChhotaBheemFaceTexture;
@@ -552,10 +535,10 @@
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
 
-    // Clear background
+    
     ctx.clearRect(0, 0, 1024, 1024);
 
-    // 1. Soft Warm Peach Skin Base Fill (smooth radial fade to seamlessly blend into 3D headMesh)
+    
     const baseGrad = ctx.createRadialGradient(512, 530, 240, 512, 530, 480);
     baseGrad.addColorStop(0, '#F4AB84');
     baseGrad.addColorStop(0.72, '#F0A37A');
@@ -565,7 +548,7 @@
     ctx.arc(512, 530, 480, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Rosy Plump Cheek Blushes
+    
     const drawBlush = (cx, cy) => {
       const bGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 115);
       bGrad.addColorStop(0, 'rgba(240, 95, 85, 0.42)');
@@ -576,40 +559,39 @@
       ctx.arc(cx, cy, 115, 0, Math.PI * 2);
       ctx.fill();
     };
-    drawBlush(320, 605); // Left cheek
-    drawBlush(704, 605); // Right cheek
+    drawBlush(320, 605); 
+    drawBlush(704, 605); 
 
-    // 3. Sacred Red Tilak on Upper Forehead
+    
     ctx.save();
     ctx.fillStyle = '#C62828';
     ctx.beginPath();
     ctx.arc(512, 305, 29, 0, Math.PI * 2);
     ctx.fill();
 
-    // Crisp darker contour
+    
     ctx.strokeStyle = '#8E0000';
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Sacred sandalwood yellow dot below tilak
+    
     ctx.fillStyle = '#FFD54F';
     ctx.beginPath();
     ctx.arc(512, 344, 7, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // 4. Arched Chestnut Brown Eyebrows
+    
     ctx.save();
     ctx.fillStyle = '#3E1C12';
     
-    // Left eyebrow (curved tapered brush stroke)
     ctx.beginPath();
     ctx.moveTo(340, 395);
     ctx.quadraticCurveTo(420, 345, 480, 380);
     ctx.quadraticCurveTo(420, 360, 340, 395);
     ctx.fill();
 
-    // Right eyebrow (mirrored)
+    
     ctx.beginPath();
     ctx.moveTo(684, 395);
     ctx.quadraticCurveTo(604, 345, 544, 380);
@@ -617,11 +599,10 @@
     ctx.fill();
     ctx.restore();
 
-    // 5. Big Expressive Cartoon Eyes
+    
     const drawEye = (centerX, centerY, isRight = false) => {
       ctx.save();
       
-      // Upper eyelid crease line
       ctx.strokeStyle = 'rgba(120, 60, 40, 0.45)';
       ctx.lineWidth = 4;
       ctx.lineCap = 'round';
@@ -631,23 +612,23 @@
       ctx.quadraticCurveTo(centerX + creaseOffset, centerY - 96, centerX + 60 + creaseOffset, centerY - 80);
       ctx.stroke();
 
-      // Sclera (White almond eye shape)
+      
       ctx.beginPath();
       ctx.ellipse(centerX, centerY, 62, 75, isRight ? -0.06 : 0.06, 0, Math.PI * 2);
       ctx.fillStyle = '#FFFFFF';
       ctx.fill();
 
-      // Soft ambient shadow at top of eye
+      
       const eyeShadowGrad = ctx.createLinearGradient(centerX, centerY - 75, centerX, centerY - 20);
       eyeShadowGrad.addColorStop(0, 'rgba(180, 160, 160, 0.28)');
       eyeShadowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = eyeShadowGrad;
       ctx.fill();
 
-      // Clip to sclera
+      
       ctx.clip();
 
-      // Iris - Large Warm Chocolate Brown
+      
       const irisX = isRight ? centerX - 6 : centerX + 6;
       const irisY = centerY + 4;
       const irisR = 48;
@@ -660,13 +641,13 @@
       ctx.arc(irisX, irisY, irisR, 0, Math.PI * 2);
       ctx.fill();
 
-      // Pupil - Deep Black
+      
       ctx.fillStyle = '#110A07';
       ctx.beginPath();
       ctx.arc(irisX, irisY, 26, 0, Math.PI * 2);
       ctx.fill();
 
-      // Dual Specular Highlights (Chhota Bheem iconic eye shine)
+      
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
       ctx.arc(irisX - 14, irisY - 14, 13, 0, Math.PI * 2);
@@ -678,7 +659,7 @@
 
       ctx.restore();
 
-      // Outer Eye Contour & Upper Eyelash line
+      
       ctx.save();
       ctx.strokeStyle = '#24100A';
       ctx.lineWidth = 7.5;
@@ -688,7 +669,7 @@
       ctx.ellipse(centerX, centerY, 62, 75, isRight ? -0.06 : 0.06, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Thicker cartoon upper eyelid rim
+      
       ctx.lineWidth = 10.5;
       ctx.beginPath();
       ctx.ellipse(centerX, centerY, 62, 75, isRight ? -0.06 : 0.06, Math.PI * 1.08, Math.PI * 1.92);
@@ -696,10 +677,10 @@
       ctx.restore();
     };
 
-    drawEye(370, 475, false); // Left eye
-    drawEye(654, 475, true);  // Right eye
+    drawEye(370, 475, false); 
+    drawEye(654, 475, true);  
 
-    // 6. Cute Cartoon Button Nose
+    
     ctx.save();
     ctx.strokeStyle = '#9C5338';
     ctx.lineWidth = 5.5;
@@ -716,7 +697,7 @@
     ctx.fill();
     ctx.restore();
 
-    // 7. Cheerful Chhota Bheem Smile
+    
     ctx.save();
     ctx.strokeStyle = '#35160D';
     ctx.lineWidth = 7.5;
@@ -727,7 +708,7 @@
     ctx.bezierCurveTo(450, 715, 574, 715, 619, 650);
     ctx.stroke();
 
-    // Smile corner dimples / upturns
+    
     ctx.lineWidth = 5.0;
     ctx.beginPath();
     ctx.moveTo(400, 656);
@@ -736,7 +717,7 @@
     ctx.quadraticCurveTo(619, 646, 610, 646);
     ctx.stroke();
 
-    // Subtle warm rosy lower lip line
+    
     ctx.strokeStyle = 'rgba(215, 95, 80, 0.6)';
     ctx.lineWidth = 5;
     ctx.beginPath();
@@ -745,7 +726,7 @@
     ctx.stroke();
     ctx.restore();
 
-    // Create Three.js Texture
+    
     const texture = new THREE.CanvasTexture(canvas);
     texture.generateMipmaps = true;
     texture.minFilter = THREE.LinearMipmapLinearFilter;
@@ -755,51 +736,49 @@
     return texture;
   }
 
-  // --------------------------------------------------------------------------
-  // AUTHENTIC 3D PROCEDURAL CHARACTER: CHHOTA BHEEM (MATCHING REFERENCE TURNAROUND)
-  // --------------------------------------------------------------------------
+  
   function createChhotaBheemCharacter() {
     const root = new THREE.Group();
     root.name = 'ChhotaBheem';
 
-    // PBR Materials based on reference model
+    
     const skinMat = new THREE.MeshStandardMaterial({
-      color: 0xF0A882,       // Warm cartoon peach skin tone
+      color: 0xF0A882,       
       roughness: 0.54,
       metalness: 0.02
     });
 
     const hairMat = new THREE.MeshStandardMaterial({
-      color: 0x441E15,       // Warm chestnut/dark chocolate brown hair
+      color: 0x441E15,       
       roughness: 0.80,
       metalness: 0.05
     });
 
     const dhotiMat = new THREE.MeshStandardMaterial({
-      color: 0xFF6A00,       // Bright saffron orange dhoti
+      color: 0xFF6A00,       
       roughness: 0.65,
       metalness: 0.04
     });
 
     const dhotiPleatMat = new THREE.MeshStandardMaterial({
-      color: 0xE65500,       // Shaded orange for front vertical pleats
+      color: 0xE65500,       
       roughness: 0.72,
       metalness: 0.04
     });
 
     const goldMat = new THREE.MeshStandardMaterial({
-      color: 0xFFB300,       // Golden locket & wristbands
+      color: 0xFFB300,       
       roughness: 0.25,
       metalness: 0.85
     });
 
     const shoeMat = new THREE.MeshStandardMaterial({
-      color: 0x8A3324,       // Reddish-brown cartoon shoes
+      color: 0x8A3324,       
       roughness: 0.75,
       metalness: 0.05
     });
 
-    // Authentic Chhota Bheem High-Res Face Material
+    
     const faceTexture = createChhotaBheemFaceTexture();
     const faceMat = new THREE.MeshStandardMaterial({
       map: faceTexture,
@@ -814,16 +793,16 @@
 
     const cordMat = new THREE.MeshStandardMaterial({ color: 0x241A15, roughness: 0.8 });
 
-    // --- CHARACTER PIVOT (Faces -Z, running away from camera) ---
+    
     const bodyPivot = new THREE.Group();
     bodyPivot.position.y = 1.05;
     root.add(bodyPivot);
 
-    // --- PELVIS & DHOTI ---
+    
     const pelvis = new THREE.Group();
     bodyPivot.add(pelvis);
 
-    // Dhoti Main Wrap (A-line draped skirt silhouette)
+    
     const dhotiGeo = new THREE.CylinderGeometry(0.42, 0.56, 0.76, 22);
     const dhotiMesh = new THREE.Mesh(dhotiGeo, dhotiMat);
     dhotiMesh.position.y = -0.22;
@@ -831,13 +810,13 @@
     dhotiMesh.receiveShadow = true;
     pelvis.add(dhotiMesh);
 
-    // Waistband Rim (Slightly deeper orange waist edge)
+    
     const waistRimGeo = new THREE.CylinderGeometry(0.43, 0.43, 0.08, 22);
     const waistRim = new THREE.Mesh(waistRimGeo, dhotiPleatMat);
     waistRim.position.y = 0.14;
     pelvis.add(waistRim);
 
-    // Vertical Center Pleats in Front (-Z side)
+    
     const pleatGroup = new THREE.Group();
     pleatGroup.position.set(0, -0.22, -0.48);
     pelvis.add(pleatGroup);
@@ -849,12 +828,12 @@
       pleatGroup.add(pleatMesh);
     }
 
-    // --- TORSO (BARE BOYISH MUSCULAR CHEST & BACK) ---
+    
     const torso = new THREE.Group();
     torso.position.y = 0.20;
     pelvis.add(torso);
 
-    // Muscular Boy Torso (Tapered chest)
+    
     const torsoGeo = new THREE.CylinderGeometry(0.50, 0.38, 0.65, 20);
     const torsoMesh = new THREE.Mesh(torsoGeo, skinMat);
     torsoMesh.position.y = 0.32;
@@ -862,7 +841,7 @@
     torsoMesh.receiveShadow = true;
     torso.add(torsoMesh);
 
-    // Front Chest Contour (Gentle pectoral definition on -Z side)
+    
     const pecGeo = new THREE.SphereGeometry(0.20, 14, 10);
     pecGeo.scale(1.1, 0.85, 0.6);
     const leftPec = new THREE.Mesh(pecGeo, skinMat);
@@ -873,7 +852,7 @@
     rightPec.position.x = 0.16;
     torso.add(rightPec);
 
-    // Back Muscular Contour (Shoulder blades visible from +Z camera view!)
+    
     const backScapGeo = new THREE.SphereGeometry(0.18, 12, 10);
     backScapGeo.scale(1.0, 1.2, 0.5);
     const leftScap = new THREE.Mesh(backScapGeo, skinMat);
@@ -884,20 +863,20 @@
     rightScap.position.x = 0.18;
     torso.add(rightScap);
 
-    // Neck Cord with Golden Rectangular Locket Pendant (From Reference Image!)
+    
     const neckCordGeo = new THREE.TorusGeometry(0.32, 0.022, 8, 24);
     const neckCord = new THREE.Mesh(neckCordGeo, cordMat);
     neckCord.rotation.x = Math.PI / 2.15;
     neckCord.position.set(0, 0.58, 0);
     torso.add(neckCord);
 
-    // Golden Rectangular Amulet Locket (Front -Z side)
+    
     const locketGeo = new THREE.BoxGeometry(0.15, 0.12, 0.04);
     const locket = new THREE.Mesh(locketGeo, goldMat);
     locket.position.set(0, 0.38, -0.32);
     torso.add(locket);
 
-    // --- NECK & HEAD ---
+    
     const neckGeo = new THREE.CylinderGeometry(0.20, 0.24, 0.18, 16);
     const neckMesh = new THREE.Mesh(neckGeo, skinMat);
     neckMesh.position.y = 0.70;
@@ -907,14 +886,14 @@
     headGroup.position.y = 0.94;
     torso.add(headGroup);
 
-    // Round Cute Boy Face Base
+    
     const headGeo = new THREE.SphereGeometry(0.39, 32, 24);
     headGeo.scale(1.0, 1.05, 1.0);
     const headMesh = new THREE.Mesh(headGeo, skinMat);
     headMesh.castShadow = true;
     headGroup.add(headMesh);
 
-    // Chubby Cheeks (From Reference Turnaround)
+    
     const cheekGeo = new THREE.SphereGeometry(0.16, 16, 12);
     cheekGeo.scale(1.0, 0.88, 0.95);
     const leftCheek = new THREE.Mesh(cheekGeo, skinMat);
@@ -925,7 +904,7 @@
     rightCheek.position.x = 0.24;
     headGroup.add(rightCheek);
 
-    // Cute Cartoon Ears
+    
     const earGeo = new THREE.SphereGeometry(0.09, 12, 10);
     earGeo.scale(0.5, 1.1, 0.85);
     const leftEar = new THREE.Mesh(earGeo, skinMat);
@@ -936,8 +915,7 @@
     rightEar.position.x = 0.38;
     headGroup.add(rightEar);
 
-    // --- AUTHENTIC CHHOTA BHEEM CARTOON FACE (CURVED 3D DECAL) ---
-    // Mathematically curved to wrap seamlessly across the spherical face front facing -Z
+    
     const facePlateGeo = new THREE.PlaneGeometry(0.70, 0.70, 18, 18);
     const pos = facePlateGeo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
@@ -952,30 +930,29 @@
 
     const facePlate = new THREE.Mesh(facePlateGeo, faceMat);
     facePlate.position.set(0, 0.01, -0.388);
-    facePlate.rotation.y = Math.PI; // Face forward towards -Z
+    facePlate.rotation.y = Math.PI; 
     headGroup.add(facePlate);
 
-    // Cute 3D Button Nose Contour (Aligned with texture nose)
+    
     const noseGeo = new THREE.SphereGeometry(0.038, 12, 10);
     noseGeo.scale(1.0, 0.75, 0.7);
     const noseMesh = new THREE.Mesh(noseGeo, skinMat);
     noseMesh.position.set(0, -0.05, -0.395);
     headGroup.add(noseMesh);
 
-    // Soft Warm Facial Key Light (Ensures Bheem's face and smile pop with hero radiance)
+    
     const faceLight = new THREE.PointLight(0xFFE8D0, 1.2, 5.0);
     faceLight.position.set(0, 0.6, -1.5);
     headGroup.add(faceLight);
 
-    // --- SIGNATURE HAIR GEOMETRY (MATCHING TURNAROUND PROFILE & BACK VIEW) ---
-    // 1. Large Rounded Chestnut Dome covering top and back of skull
+    
     const hairDomeGeo = new THREE.SphereGeometry(0.44, 24, 20, 0, Math.PI * 2, 0, Math.PI * 0.7);
     const hairDome = new THREE.Mesh(hairDomeGeo, hairMat);
     hairDome.position.set(0, 0.08, 0.04);
     hairDome.castShadow = true;
     headGroup.add(hairDome);
 
-    // 2. Posterior Fullness (Occipital bulb seen directly from +Z camera!)
+    
     const occipitalGeo = new THREE.SphereGeometry(0.40, 20, 16);
     occipitalGeo.scale(1.04, 1.0, 1.15);
     const occipital = new THREE.Mesh(occipitalGeo, hairMat);
@@ -983,7 +960,7 @@
     occipital.castShadow = true;
     headGroup.add(occipital);
 
-    // 3. Sideburns and temporal volume hugging ears
+    
     const sideburnGeo = new THREE.BoxGeometry(0.08, 0.22, 0.12);
     const leftSideburn = new THREE.Mesh(sideburnGeo, hairMat);
     leftSideburn.position.set(-0.38, -0.05, -0.08);
@@ -993,7 +970,7 @@
     rightSideburn.position.x = 0.38;
     headGroup.add(rightSideburn);
 
-    // 4. Front Hair Crest (Framing forehead gracefully above the tilak)
+    
     const hairCrestGeo = new THREE.SphereGeometry(0.26, 20, 14);
     hairCrestGeo.scale(1.5, 0.65, 0.85);
     const hairCrest = new THREE.Mesh(hairCrestGeo, hairMat);
@@ -1002,12 +979,12 @@
     hairCrest.castShadow = true;
     headGroup.add(hairCrest);
 
-    // 5. THE SIGNATURE REAR NAPE FLICK/TAIL (Visible in profile & back view of reference!)
+    
     const napeFlickGroup = new THREE.Group();
     napeFlickGroup.position.set(0, -0.04, 0.36);
     headGroup.add(napeFlickGroup);
 
-    // Curved flick cone pointing outward and slightly upward at the nape
+    
     const flickGeo = new THREE.ConeGeometry(0.18, 0.32, 14);
     const flickMesh = new THREE.Mesh(flickGeo, hairMat);
     flickMesh.rotation.x = Math.PI / 2.8;
@@ -1021,25 +998,25 @@
     flickTip.castShadow = true;
     napeFlickGroup.add(flickTip);
 
-    // --- ARMS & GOLDEN WRISTBANDS ---
+    
     function createArm(isLeft) {
       const armGroup = new THREE.Group();
       const sign = isLeft ? -1 : 1;
       armGroup.position.set(sign * 0.54, 0.50, 0);
 
-      // Shoulder Deltoid
+      
       const shoulderGeo = new THREE.SphereGeometry(0.18, 12, 10);
       const shoulder = new THREE.Mesh(shoulderGeo, skinMat);
       armGroup.add(shoulder);
 
-      // Upper Arm
+      
       const upperArmGeo = new THREE.CylinderGeometry(0.15, 0.13, 0.42, 14);
       const upperArm = new THREE.Mesh(upperArmGeo, skinMat);
       upperArm.position.y = -0.21;
       upperArm.castShadow = true;
       armGroup.add(upperArm);
 
-      // Elbow & Forearm Group
+      
       const forearmGroup = new THREE.Group();
       forearmGroup.position.y = -0.42;
       armGroup.add(forearmGroup);
@@ -1050,13 +1027,13 @@
       forearm.castShadow = true;
       forearmGroup.add(forearm);
 
-      // Golden Wristband Cuff (From Reference Image!)
+      
       const wristbandGeo = new THREE.CylinderGeometry(0.14, 0.14, 0.09, 16);
       const wristband = new THREE.Mesh(wristbandGeo, goldMat);
       wristband.position.y = -0.28;
       forearmGroup.add(wristband);
 
-      // Clenched Superhero Fist
+      
       const fistGeo = new THREE.SphereGeometry(0.12, 10, 10);
       const fist = new THREE.Mesh(fistGeo, skinMat);
       fist.position.y = -0.39;
@@ -1071,32 +1048,32 @@
     const rightArm = createArm(false);
     torso.add(rightArm.root);
 
-    // --- LEGS & REDDISH-BROWN SHOES (From Reference Turnaround) ---
+    
     function createLeg(isLeft) {
       const legGroup = new THREE.Group();
       const sign = isLeft ? -1 : 1;
       legGroup.position.set(sign * 0.22, -0.46, 0);
 
-      // Lower Bare Calf & Shin
+      
       const calfGeo = new THREE.CylinderGeometry(0.14, 0.11, 0.38, 14);
       const calf = new THREE.Mesh(calfGeo, skinMat);
       calf.position.y = -0.18;
       calf.castShadow = true;
       legGroup.add(calf);
 
-      // Reddish-Brown Shoe / Footwear (From Reference Image!)
+      
       const shoeGroup = new THREE.Group();
       shoeGroup.position.set(0, -0.38, 0);
       legGroup.add(shoeGroup);
 
-      // Main Shoe Body
+      
       const shoeBaseGeo = new THREE.BoxGeometry(0.18, 0.14, 0.32);
       const shoeBase = new THREE.Mesh(shoeBaseGeo, shoeMat);
       shoeBase.position.set(0, 0, -0.05);
       shoeBase.castShadow = true;
       shoeGroup.add(shoeBase);
 
-      // Rounded Toe Cap
+      
       const toeCapGeo = new THREE.SphereGeometry(0.11, 10, 8);
       toeCapGeo.scale(1.0, 0.7, 1.2);
       const toeCap = new THREE.Mesh(toeCapGeo, shoeMat);
@@ -1113,7 +1090,7 @@
     const rightLeg = createLeg(false);
     pelvis.add(rightLeg.root);
 
-    // Realistic Ground Shadow Mesh under character
+    
     const shadowCanvas = document.createElement('canvas');
     shadowCanvas.width = 128;
     shadowCanvas.height = 128;
@@ -1140,7 +1117,7 @@
     shadowMesh.position.y = 0.03;
     root.add(shadowMesh);
 
-    // Power-up Aura Ring
+    
     const auraGeo = new THREE.TorusGeometry(0.95, 0.05, 8, 32);
     const auraMat = new THREE.MeshBasicMaterial({
       color: 0x00E5FF,
@@ -1171,19 +1148,19 @@
       auraRing,
       auraMat,
 
-      // Procedural 3D Animation Controller
+      
       updateAnimation: function(isJumping, isSliding, isGameOver, delta, runSpeed, playerY) {
-        // Aura rotation
+        
         auraRing.rotation.z += delta * 4.0;
 
-        // Ground shadow follows road and scales with jump
+        
         shadowMesh.position.y = 0.03 - playerY;
         const jumpH = Math.max(0, playerY);
         shadowMesh.scale.setScalar(1.0 + jumpH * 0.2);
         shadowMat.opacity = Math.max(0.08, 0.55 / (1.0 + jumpH * 0.85));
 
         if (isGameOver) {
-          // Stumbled backwards fall
+          
           torso.rotation.x = -0.55;
           headGroup.rotation.x = 0.35;
           leftArm.root.rotation.x = 1.1;
@@ -1195,9 +1172,9 @@
         }
 
         if (isJumping) {
-          // Superhero Leap Forward: Tuck knees forward (-Z), pump arms up
+          
           bodyPivot.position.y = 1.05;
-          torso.rotation.x = 0.18; // Lean forward into leap
+          torso.rotation.x = 0.18; 
           headGroup.rotation.x = -0.12;
           headGroup.position.y = 0.94;
 
@@ -1209,10 +1186,10 @@
           rightArm.root.rotation.x = -1.75;
           rightArm.forearm.rotation.x = -0.4;
 
-          // Nape hair flick flutters in air stream
+          
           napeFlickGroup.rotation.x = 0.35;
         } else if (isSliding) {
-          // Low-profile Duck & Slide: Torso leans back (+Z), legs slide forward (-Z)
+          
           bodyPivot.position.y = 0.38;
           torso.rotation.x = -0.95;
           headGroup.rotation.x = 0.75;
@@ -1225,29 +1202,29 @@
 
           napeFlickGroup.rotation.x = -0.35;
         } else {
-          // Athletic 3D Run Cycle (Pumping along -Z)
+          
           bodyPivot.position.y = 1.05;
           runAnimTime += delta * (runSpeed * 0.42);
           const cycle = runAnimTime;
 
-          // Natural Torso lean and lateral sprint sway
+          
           torso.rotation.x = 0.15;
           torso.rotation.y = Math.sin(cycle) * 0.10;
           headGroup.rotation.y = -Math.sin(cycle) * 0.08;
           headGroup.rotation.x = -0.04;
           headGroup.position.y = 0.94 + Math.abs(Math.sin(cycle * 2.0)) * 0.05;
 
-          // Subtle hair nape flick bounce
+          
           napeFlickGroup.rotation.x = Math.sin(cycle * 2.0) * 0.15;
 
-          // Alternating Arm Swings: One drives forward (-Z), other swings back (+Z)
+          
           const armAngle = Math.sin(cycle) * 0.82;
           leftArm.root.rotation.x = armAngle;
           leftArm.forearm.rotation.x = -0.35 - Math.max(0, armAngle * 0.5);
           rightArm.root.rotation.x = -armAngle;
           rightArm.forearm.rotation.x = -0.35 - Math.max(0, -armAngle * 0.5);
 
-          // Alternating Leg Strides along -Z and +Z
+          
           const legAngle = Math.sin(cycle) * 0.88;
           leftLeg.root.rotation.x = -legAngle;
           rightLeg.root.rotation.x = legAngle;
@@ -1256,16 +1233,13 @@
     };
   }
 
-  // --------------------------------------------------------------------------
-  // PROCEDURAL ASSET GENERATORS: ENVIRONMENT, OBSTACLES, COLLECTIBLES
-  // --------------------------------------------------------------------------
-
-  // Golden Motichoor Laddu (Glowing spinning collectible)
+  
+  
   function createLadduMesh() {
     const group = new THREE.Group();
     group.name = 'Laddu';
 
-    // Core textured golden sphere
+    
     const ladduGeo = new THREE.DodecahedronGeometry(0.48, 2);
     const ladduMat = new THREE.MeshStandardMaterial({
       color: 0xFFA000,
@@ -1278,7 +1252,7 @@
     sphere.castShadow = true;
     group.add(sphere);
 
-    // Golden Sparkle Halo Ring
+    
     const haloGeo = new THREE.TorusGeometry(0.68, 0.03, 6, 24);
     const haloMat = new THREE.MeshBasicMaterial({
       color: 0xFFE082,
@@ -1294,7 +1268,7 @@
     return group;
   }
 
-  // Laddu Magnet Power-Up Item (Horseshoe shape with energy rings)
+  
   function createMagnetMesh() {
     const group = new THREE.Group();
     group.name = 'MagnetPowerup';
@@ -1311,7 +1285,7 @@
     horseshoe.rotation.z = Math.PI;
     group.add(horseshoe);
 
-    // Silver poles
+    
     const poleGeo = new THREE.BoxGeometry(0.24, 0.28, 0.24);
     const silverMat = new THREE.MeshStandardMaterial({ color: 0xEEEEEE, metalness: 0.9, roughness: 0.1 });
     const p1 = new THREE.Mesh(poleGeo, silverMat);
@@ -1325,7 +1299,7 @@
     return group;
   }
 
-  // Super Laddu Boost Item (Pulsing mega laddu with fire aura)
+  
   function createBoostMesh() {
     const group = new THREE.Group();
     group.name = 'BoostPowerup';
@@ -1350,14 +1324,14 @@
     return group;
   }
 
-  // OBSTACLE 1: Fallen Ancient Mossy Log (Jump over with Up Arrow)
+  
   function createLogObstacle() {
     const group = new THREE.Group();
     group.name = 'ObstacleLog';
 
     const logGeo = new THREE.CylinderGeometry(0.42, 0.46, 2.4, 12);
     const logMat = new THREE.MeshStandardMaterial({
-      color: 0x4E3629,       // Dark weathered wood
+      color: 0x4E3629,       
       roughness: 0.85,
       metalness: 0.05
     });
@@ -1368,7 +1342,7 @@
     logMesh.receiveShadow = true;
     group.add(logMesh);
 
-    // Green moss patch
+    
     const mossGeo = new THREE.BoxGeometry(1.6, 0.15, 0.6);
     const mossMat = new THREE.MeshStandardMaterial({
       color: 0x2E7D32,
@@ -1378,7 +1352,7 @@
     moss.position.set(0, 0.84, 0);
     group.add(moss);
 
-    // Bounding dimensions for collision
+    
     group.userData = {
       type: 'jump_hurdle',
       height: 0.9,
@@ -1390,12 +1364,12 @@
     return group;
   }
 
-  // OBSTACLE 2: Low Overhanging Banyan Branch / Vine Arch (Slide under with Down Arrow)
+  
   function createBranchObstacle() {
     const group = new THREE.Group();
     group.name = 'ObstacleBranch';
 
-    // Archway supports (Left and right trunks)
+    
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3E2723, roughness: 0.9 });
     const postGeo = new THREE.CylinderGeometry(0.25, 0.3, 3.2, 8);
     
@@ -1408,7 +1382,7 @@
     rightPost.position.x = 1.3;
     group.add(rightPost);
 
-    // Overhanging thick branch spanning across
+    
     const beamGeo = new THREE.CylinderGeometry(0.35, 0.32, 3.0, 10);
     const beam = new THREE.Mesh(beamGeo, trunkMat);
     beam.rotation.z = Math.PI / 2;
@@ -1416,7 +1390,7 @@
     beam.castShadow = true;
     group.add(beam);
 
-    // Hanging vines & leaves
+    
     const vineMat = new THREE.MeshStandardMaterial({ color: 0x1B5E20, roughness: 0.8 });
     for (let i = -1; i <= 1; i += 0.5) {
       const vineGeo = new THREE.CylinderGeometry(0.04, 0.02, 1.1, 6);
@@ -1430,13 +1404,13 @@
       height: 2.6,
       width: 2.4,
       depth: 0.8,
-      hitYMin: 1.1,   // Bottom of obstacle where sliding ducks underneath
+      hitYMin: 1.1,   
       hitYMax: 2.6
     };
     return group;
   }
 
-  // OBSTACLE 3: Ancient Stone Pillar / Boulder (Steer left/right or smash with Super Boost)
+  
   function createBoulderObstacle() {
     const group = new THREE.Group();
     group.name = 'ObstacleBoulder';
@@ -1454,7 +1428,7 @@
     rock.receiveShadow = true;
     group.add(rock);
 
-    // Ancient Sanskrit carving accents (Golden inlays)
+    
     const runeGeo = new THREE.BoxGeometry(0.4, 0.6, 0.04);
     const runeMat = new THREE.MeshStandardMaterial({
       color: 0xFFB300,
@@ -1476,20 +1450,20 @@
     return group;
   }
 
-  // Roadside Ancient Banyan Tree
+  
   function createBanyanTree() {
     const group = new THREE.Group();
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3E2723, roughness: 0.9 });
     const leafMat = new THREE.MeshStandardMaterial({ color: 0x1B4332, roughness: 0.7 });
 
-    // Trunk
+    
     const trunkGeo = new THREE.CylinderGeometry(0.8, 1.4, 8, 8);
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
     trunk.position.y = 4;
     trunk.castShadow = true;
     group.add(trunk);
 
-    // Twisted aerial roots
+    
     for (let r = 0; r < 4; r++) {
       const rootGeo = new THREE.CylinderGeometry(0.18, 0.28, 5, 6);
       const rootMesh = new THREE.Mesh(rootGeo, trunkMat);
@@ -1499,7 +1473,7 @@
       group.add(rootMesh);
     }
 
-    // Lush foliage canopy
+    
     const canopy1 = new THREE.Mesh(new THREE.DodecahedronGeometry(3.5, 1), leafMat);
     canopy1.position.set(0, 8.5, 0);
     canopy1.castShadow = true;
@@ -1512,7 +1486,7 @@
     return group;
   }
 
-  // Roadside Torch on Pole (Casting warm flickering dynamic light)
+  
   function createTorch() {
     const group = new THREE.Group();
     const poleMat = new THREE.MeshStandardMaterial({ color: 0x2D1B11, roughness: 0.9 });
@@ -1521,14 +1495,14 @@
     pole.position.y = 1.6;
     group.add(pole);
 
-    // Torch bowl
+    
     const bowlGeo = new THREE.CylinderGeometry(0.3, 0.15, 0.35, 8);
     const goldMat = new THREE.MeshStandardMaterial({ color: 0xB8860B, metalness: 0.7, roughness: 0.3 });
     const bowl = new THREE.Mesh(bowlGeo, goldMat);
     bowl.position.y = 3.2;
     group.add(bowl);
 
-    // Glowing flame
+    
     const flameGeo = new THREE.ConeGeometry(0.2, 0.5, 8);
     const flameMat = new THREE.MeshBasicMaterial({ color: 0xFF6F00 });
     const flame = new THREE.Mesh(flameGeo, flameMat);
@@ -1538,9 +1512,7 @@
     return group;
   }
 
-  // --------------------------------------------------------------------------
-  // PARTICLE SYSTEM: ATMOSPHERIC FIREFLIES, DUST, & EXPLOSION SHATTER
-  // --------------------------------------------------------------------------
+  
   class ParticleManager {
     constructor(scene) {
       this.scene = scene;
@@ -1550,7 +1522,7 @@
       this.initDustPool();
     }
 
-    // Ambient floating fireflies (twilight enchanted Dholakpur forest)
+    
     initFireflies() {
       const count = 140;
       const geo = new THREE.BufferGeometry();
@@ -1587,11 +1559,11 @@
 
       for (let i = 0; i < count; i++) {
         const idx = i * 3;
-        // Float gently with sine wave drift
+        
         pos[idx + 1] += Math.sin(time * 2.0 + this.fireflyPhases[i]) * 0.015;
         pos[idx] += Math.cos(time * 1.5 + this.fireflyPhases[i]) * 0.015;
 
-        // Wrap fireflies around player's active world window
+        
         if (pos[idx + 2] > playerZ + 15) {
           pos[idx + 2] = playerZ - 100 - Math.random() * 20;
           pos[idx] = (Math.random() - 0.5) * 36;
@@ -1600,7 +1572,7 @@
       this.fireflies.geometry.attributes.position.needsUpdate = true;
     }
 
-    // Ground running dust particle pool
+    
     initDustPool() {
       const geo = new THREE.SphereGeometry(0.14, 6, 6);
       const mat = new THREE.MeshBasicMaterial({
@@ -1636,7 +1608,7 @@
       p.mesh.visible = true;
     }
 
-    // Explosion debris when smashing obstacles during Super Laddu Boost!
+    
     emitSmashDebris(originX, originY, originZ, color = 0x8D6E63) {
       const numPieces = 18;
       for (let i = 0; i < numPieces; i++) {
@@ -1662,7 +1634,7 @@
     }
 
     update(delta) {
-      // Update dust particles
+      
       for (let i = 0; i < this.dustParticles.length; i++) {
         const p = this.dustParticles[i];
         if (!p.mesh.visible) continue;
@@ -1679,7 +1651,7 @@
         }
       }
 
-      // Update explosion debris
+      
       for (let i = this.debrisParticles.length - 1; i >= 0; i--) {
         const p = this.debrisParticles[i];
         p.life -= delta;
@@ -1689,7 +1661,7 @@
           p.mesh.material.dispose();
           this.debrisParticles.splice(i, 1);
         } else {
-          p.vy -= 28.0 * delta; // Gravity
+          p.vy -= 28.0 * delta; 
           p.mesh.position.x += p.vx * delta;
           p.mesh.position.y += p.vy * delta;
           p.mesh.position.z += p.vz * delta;
@@ -1697,32 +1669,30 @@
           p.mesh.rotation.y += p.ry * delta;
           if (p.mesh.position.y < 0.1) {
             p.mesh.position.y = 0.1;
-            p.vy = -p.vy * 0.4; // Bounce
+            p.vy = -p.vy * 0.4; 
           }
         }
       }
     }
   }
 
-  // --------------------------------------------------------------------------
-  // WORLD STREAMING & CHUNK SYSTEM (INFINITE PROCEDURAL TRACK)
-  // --------------------------------------------------------------------------
+  
   class TrackChunk {
     constructor(scene, zPosition) {
       this.scene = scene;
       this.group = new THREE.Group();
       this.zPosition = zPosition;
-      this.items = []; // Obstacles and collectibles inside this chunk
+      this.items = []; 
       this.buildTrackGeometry();
       this.group.position.z = zPosition;
       this.scene.add(this.group);
     }
 
     buildTrackGeometry() {
-      // Central Dirt Path / Running Road
+      
       const pathGeo = new THREE.PlaneGeometry(CONFIG.LANE_WIDTH * 3.6, CONFIG.CHUNK_LENGTH);
       const pathMat = new THREE.MeshStandardMaterial({
-        color: 0x5C4033,       // Rich terracotta/dirt pathway
+        color: 0x5C4033,       
         roughness: 0.9,
         metalness: 0.05
       });
@@ -1731,7 +1701,7 @@
       path.receiveShadow = true;
       this.group.add(path);
 
-      // Left & Right Road Borders (Ancient carved stone curbs)
+      
       const curbGeo = new THREE.BoxGeometry(0.35, 0.25, CONFIG.CHUNK_LENGTH);
       const curbMat = new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.8 });
       
@@ -1744,10 +1714,10 @@
       rightCurb.position.x = CONFIG.LANE_WIDTH * 1.8;
       this.group.add(rightCurb);
 
-      // Lush Forest Ground Sides (Deep twilight moss/grass)
+      
       const forestSideGeo = new THREE.PlaneGeometry(28, CONFIG.CHUNK_LENGTH);
       const forestSideMat = new THREE.MeshStandardMaterial({
-        color: 0x0E2419,       // Deep forest green
+        color: 0x0E2419,       
         roughness: 0.95
       });
 
@@ -1761,7 +1731,7 @@
       rightForest.position.x = 19;
       this.group.add(rightForest);
 
-      // Roadside Banyan Trees
+      
       const tree1 = createBanyanTree();
       tree1.position.set(-8.5 - Math.random() * 2, 0, -CONFIG.CHUNK_LENGTH * 0.25);
       this.group.add(tree1);
@@ -1770,29 +1740,28 @@
       tree2.position.set(8.5 + Math.random() * 2, 0, CONFIG.CHUNK_LENGTH * 0.25);
       this.group.add(tree2);
 
-      // Roadside Torch
+      
       const torch = createTorch();
       torch.position.set(CONFIG.LANE_WIDTH * 1.95, 0, 0);
       this.group.add(torch);
     }
 
-    // Populate chunk with obstacles and collectibles based on difficulty
+    
     populate(difficulty) {
       this.clearItems();
 
-      // Determine lanes available [-2.7, 0, 2.7]
+      
       const lanes = [...CONFIG.LANES];
       const zOffsets = [-14, 0, 14];
 
       zOffsets.forEach(zOff => {
         const roll = Math.random();
 
-        // 55% chance to spawn an obstacle row
+        
         if (roll < 0.65) {
-          // Shuffle lanes
+          
           const shuffledLanes = [...lanes].sort(() => Math.random() - 0.5);
           
-          // Number of blocked lanes (1 or 2, always leave at least 1 path open!)
           const numObstacles = (difficulty > 1.4 && Math.random() < 0.4) ? 2 : 1;
 
           for (let i = 0; i < numObstacles; i++) {
@@ -1801,13 +1770,13 @@
             let obstacleMesh;
 
             if (obsType < 0.38) {
-              // Fallen mossy log (Jump)
+              
               obstacleMesh = createLogObstacle();
             } else if (obsType < 0.72) {
-              // Low banyan branch (Slide)
+              
               obstacleMesh = createBranchObstacle();
             } else {
-              // Ancient boulder / Pillar (Steer or Smash)
+              
               obstacleMesh = createBoulderObstacle();
             }
 
@@ -1816,24 +1785,24 @@
             this.items.push(obstacleMesh);
           }
 
-          // Spawn collectible in the remaining open lane
+          
           const openLane = shuffledLanes[numObstacles];
           const itemRoll = Math.random();
 
           if (itemRoll < 0.10 && difficulty > 1.1) {
-            // Magnet Power-up
+            
             const magnet = createMagnetMesh();
             magnet.position.set(openLane, 1.2, zOff);
             this.group.add(magnet);
             this.items.push(magnet);
           } else if (itemRoll < 0.16 && difficulty > 1.2) {
-            // Super Laddu Boost Power-up
+            
             const boost = createBoostMesh();
             boost.position.set(openLane, 1.2, zOff);
             this.group.add(boost);
             this.items.push(boost);
           } else {
-            // Golden Laddu Trail (3 laddus in a line)
+            
             for (let k = -2; k <= 2; k += 2) {
               const laddu = createLadduMesh();
               laddu.position.set(openLane, 1.0, zOff + k * 1.5);
@@ -1842,11 +1811,11 @@
             }
           }
         } else {
-          // Pure golden laddu arch or straight trail
+          
           const lane = lanes[Math.floor(Math.random() * lanes.length)];
           for (let k = -3; k <= 3; k += 1.8) {
             const laddu = createLadduMesh();
-            // Parabolic arch
+            
             const yArc = 1.0 + Math.sin(((k + 3) / 6) * Math.PI) * 1.2;
             laddu.position.set(lane, yArc, zOff + k);
             this.group.add(laddu);
@@ -1870,26 +1839,27 @@
     }
   }
 
-  // --------------------------------------------------------------------------
-  // MAIN GAME ENGINE CONTROLLER
-  // --------------------------------------------------------------------------
+  
   class ChhotaBheemGame {
     constructor() {
       this.canvas = document.getElementById('webgl-canvas');
       this.clock = new THREE.Clock();
       this.sound = new SoundEngine();
 
-      // State variables
-      this.state = 'TITLE'; // 'TITLE', 'PLAYING', 'PAUSED', 'GAMEOVER'
+      
+      this.state = 'TITLE'; 
       this.score = 0;
       this.distance = 0;
       this.laddus = 0;
       this.highScore = parseInt(localStorage.getItem('bheem_high_score') || '0', 10);
-      this.speed = CONFIG.BASE_SPEED;
+      this.speedMultiplier = 1.0;
+      this.speed = CONFIG.BASE_SPEED * this.speedMultiplier;
       this.difficulty = 1.0;
+      this.achievedMilestones = new Set();
+      this.milestoneToastTimer = null;
 
-      // Player Movement Physics State
-      this.currentLane = 1; // 0 = Left, 1 = Center, 2 = Right
+      
+      this.currentLane = 1; 
       this.targetLaneX = 0;
       this.playerPos = new THREE.Vector3(0, 0, 0);
       this.playerVelocityY = 0;
@@ -1899,15 +1869,15 @@
       this.runAnimTime = 0;
       this.stepTimer = 0;
 
-      // Active Power-ups State
+      
       this.magnetTimer = 0;
       this.boostTimer = 0;
 
-      // Camera Shake State
+      
       this.cameraShakeIntensity = 0;
       this.cameraShakeDecay = 6.0;
 
-      // Three.js Core Components
+      
       this.initThree();
       this.initLighting();
       this.initPlayer();
@@ -1916,29 +1886,28 @@
       this.initInputs();
       this.initUI();
 
-      // Resize listener
+      
       window.addEventListener('resize', () => this.onWindowResize(), false);
 
-      // Start RAF Loop
+      
       this.animate = this.animate.bind(this);
       requestAnimationFrame(this.animate);
     }
 
-    // Initialize WebGL Renderer, Scene, Camera
+    
     initThree() {
       this.scene = new THREE.Scene();
       
-      // Twilight Dholakpur Forest Atmospheric Fog
       this.scene.background = new THREE.Color(0x0A1813);
       this.scene.fog = new THREE.FogExp2(0x0F251E, 0.016);
 
-      // Perspective Camera setup
+      
       const aspect = window.innerWidth / window.innerHeight;
       this.camera = new THREE.PerspectiveCamera(CONFIG.FOV_NORMAL, aspect, 0.2, 250);
       this.cameraTarget = new THREE.Vector3(0, 1.8, -4);
       this.cameraBasePos = new THREE.Vector3(0, 4.5, 7.5);
 
-      // High-performance WebGL Renderer with Soft Shadow Mapping
+      
       this.renderer = new THREE.WebGLRenderer({
         canvas: this.canvas,
         antialias: true,
@@ -1952,17 +1921,17 @@
       this.renderer.toneMappingExposure = 1.15;
     }
 
-    // Cinematic Sunset / Twilight Forest Lighting
+    
     initLighting() {
-      // Warm golden hemisphere light (Sunset sky vs dark ground)
+      
       this.hemiLight = new THREE.HemisphereLight(0xFFA726, 0x051E14, 0.85);
       this.scene.add(this.hemiLight);
 
-      // Soft ambient fill light
+      
       this.ambientLight = new THREE.AmbientLight(0xFFB74D, 0.4);
       this.scene.add(this.ambientLight);
 
-      // Main Directional Sun Light (Low golden sunset angle with soft shadows)
+      
       this.sunLight = new THREE.DirectionalLight(0xFFB74D, 1.6);
       this.sunLight.position.set(12, 22, 10);
       this.sunLight.castShadow = true;
@@ -1978,25 +1947,25 @@
       this.scene.add(this.sunLight);
       this.scene.add(this.sunLight.target);
 
-      // Dynamic Character Fill Point Light (Ensures Bheem always looks sculpted and illuminated)
+      
       this.charLight = new THREE.PointLight(0xFFD54F, 0.8, 14);
       this.charLight.position.set(0, 3.5, 2);
       this.scene.add(this.charLight);
     }
 
-    // Build Character Model
+    
     initPlayer() {
       this.bheemRig = createChhotaBheemCharacter();
       this.scene.add(this.bheemRig.root);
     }
 
-    // Build Streaming Chunks
+    
     initTrack() {
       this.chunks = [];
       for (let i = 0; i < CONFIG.NUM_CHUNKS; i++) {
         const z = -i * CONFIG.CHUNK_LENGTH;
         const chunk = new TrackChunk(this.scene, z);
-        // Do not spawn obstacles on the first chunk so the player starts clean
+        
         if (i > 0) {
           chunk.populate(1.0);
         }
@@ -2004,7 +1973,7 @@
       }
     }
 
-    // Bind Keyboard & Touch Controls
+    
     initInputs() {
       window.addEventListener('keydown', (e) => {
         if (this.state === 'TITLE' && (e.code === 'Space' || e.code === 'Enter')) {
@@ -2131,7 +2100,7 @@
       window.addEventListener('touchcancel', () => { swipeHandled = true; }, { passive: true });
     }
 
-    // UI Hookups
+    
     initUI() {
       this.ui = {
         hud: document.getElementById('hud'),
@@ -2158,6 +2127,8 @@
         boostContainer: document.getElementById('boost-bar-container'),
         boostFill: document.getElementById('boost-bar-fill'),
         boostText: document.getElementById('boost-timer-text'),
+        milestoneToast: document.getElementById('milestone-toast'),
+        speedSelect: document.getElementById('speed-select'),
         goDistance: document.getElementById('go-distance'),
         goLaddus: document.getElementById('go-laddus'),
         goTotalScore: document.getElementById('go-total-score'),
@@ -2174,9 +2145,29 @@
       });
 
       this.ui.btnResume.addEventListener('click', () => this.resumeGame());
-      this.ui.btnPause.addEventListener('click', () => this.pauseGame());
+      if (this.ui.btnPause) {
+        this.ui.btnPause.addEventListener('click', () => this.pauseGame());
+      }
+      const speedBtns = document.querySelectorAll('.speed-btn');
+      if (this.ui.speedSelect) {
+        this.ui.speedSelect.addEventListener('change', (e) => {
+          const val = parseFloat(e.target.value) || 1.0;
+          this.speedMultiplier = val;
+          speedBtns.forEach(btn => {
+            btn.classList.toggle('active', parseFloat(btn.dataset.speed) === val);
+          });
+        });
+      }
+      speedBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseFloat(btn.dataset.speed) || 1.0;
+          this.speedMultiplier = val;
+          if (this.ui.speedSelect) this.ui.speedSelect.value = val.toString();
+          speedBtns.forEach(b => b.classList.toggle('active', b === btn));
+        });
+      });
 
-      // Immediate and reliable restart handlers
+      
       const onRestartClick = (e) => {
         if (e) {
           e.preventDefault();
@@ -2186,7 +2177,7 @@
           clearTimeout(this.gameOverTimeout);
           this.gameOverTimeout = null;
         }
-        // Force hide immediately
+        
         this.ui.screenGameOver.style.display = 'none';
         this.ui.screenGameOver.classList.remove('active');
         this.ui.screenGameOver.classList.add('hidden');
@@ -2213,7 +2204,7 @@
         this.ui.soundIcon.innerText = on ? '🔊' : '🔇';
       });
 
-      // Graphics quality toggle
+      
       this.isUltraGraphics = true;
       this.ui.btnQuality.addEventListener('click', () => {
         this.isUltraGraphics = !this.isUltraGraphics;
@@ -2223,9 +2214,7 @@
       });
     }
 
-    // ------------------------------------------------------------------------
-    // GAMEPLAY CONTROLS & ACTIONS
-    // ------------------------------------------------------------------------
+    
     moveLane(direction) {
       const newLane = this.currentLane + direction;
       if (newLane >= 0 && newLane <= 2) {
@@ -2238,7 +2227,7 @@
     jump() {
       if (!this.isJumping) {
         this.isJumping = true;
-        this.isSliding = false; // Cancel slide if jumping
+        this.isSliding = false; 
         this.playerVelocityY = CONFIG.JUMP_VELOCITY;
         this.sound.playJump();
         this.particles.emitDust(this.playerPos.x, 0, this.playerPos.z);
@@ -2251,7 +2240,7 @@
         this.slideTimer = CONFIG.SLIDE_DURATION;
         this.sound.playSlide();
         this.particles.emitDust(this.playerPos.x, 0, this.playerPos.z);
-        // If mid-air, apply quick downward dive velocity
+        
         if (this.isJumping) {
           this.playerVelocityY = -22.0;
         }
@@ -2269,16 +2258,14 @@
       }, 200);
     }
 
-    // ------------------------------------------------------------------------
-    // GAME LIFECYCLE MANAGEMENT
-    // ------------------------------------------------------------------------
+    
     startGame() {
       if (this.gameOverTimeout) {
         clearTimeout(this.gameOverTimeout);
         this.gameOverTimeout = null;
       }
 
-      // Force hide all modal overlays completely
+      
       this.ui.screenGameOver.style.display = 'none';
       this.ui.screenGameOver.classList.remove('active');
       this.ui.screenGameOver.classList.add('hidden');
@@ -2299,8 +2286,17 @@
       this.score = 0;
       this.distance = 0;
       this.laddus = 0;
-      this.speed = CONFIG.BASE_SPEED;
+      this.speed = CONFIG.BASE_SPEED * this.speedMultiplier;
       this.difficulty = 1.0;
+      this.achievedMilestones.clear();
+      if (this.milestoneToastTimer) {
+        clearTimeout(this.milestoneToastTimer);
+        this.milestoneToastTimer = null;
+      }
+      if (this.ui.milestoneToast) {
+        this.ui.milestoneToast.classList.add('hidden');
+        this.ui.milestoneToast.classList.remove('active', 'fading');
+      }
 
       this.currentLane = 1;
       this.targetLaneX = CONFIG.LANES[1];
@@ -2313,7 +2309,7 @@
       this.magnetTimer = 0;
       this.boostTimer = 0;
 
-      // Reset chunks
+      
       for (let i = 0; i < this.chunks.length; i++) {
         const z = -i * CONFIG.CHUNK_LENGTH;
         this.chunks[i].reposition(z, 1.0);
@@ -2340,11 +2336,11 @@
       this.ui.screenPause.style.display = 'none';
       this.ui.screenPause.classList.remove('active');
       this.ui.screenPause.classList.add('hidden');
-      this.clock.getDelta(); // Clear delta accumulation
+      this.clock.getDelta(); 
     }
 
     gameOver(reason = 'obstacle') {
-      if (this.state === 'GAMEOVER') return; // Prevent multiple calls
+      if (this.state === 'GAMEOVER') return; 
       this.state = 'GAMEOVER';
       this.sound.playCrash();
       this.triggerScreenShake(0.85);
@@ -2356,7 +2352,7 @@
         localStorage.setItem('bheem_high_score', this.highScore.toString());
       }
 
-      // Populate Game Over screen stats
+      
       const totalScore = Math.floor(this.distance + this.laddus * 10);
       this.ui.goDistance.innerText = `${Math.floor(this.distance)} m`;
       this.ui.goLaddus.innerText = this.laddus;
@@ -2369,10 +2365,10 @@
         this.ui.goBadge.classList.add('hidden');
       }
 
-      // Delayed showing of game over overlay for dramatic fall
+      
       if (this.gameOverTimeout) clearTimeout(this.gameOverTimeout);
       this.gameOverTimeout = setTimeout(() => {
-        // Only show if still in GAMEOVER state (user didn't already hit restart)
+        
         if (this.state === 'GAMEOVER') {
           this.ui.hud.classList.add('hidden');
           this.ui.screenGameOver.classList.remove('hidden');
@@ -2383,15 +2379,13 @@
       }, 500);
     }
 
-    // ------------------------------------------------------------------------
-    // COLLISION DETECTION & POWER-UP LOGIC
-    // ------------------------------------------------------------------------
+    
     checkCollisions() {
       const pX = this.playerPos.x;
       const pY = this.playerPos.y;
       const pZ = this.playerPos.z;
 
-      // Effective player bounding radius & height profile
+      
       const playerRadius = 0.55;
       const playerTopY = this.isSliding ? 0.75 : (pY + 1.95);
       const playerBottomY = pY;
@@ -2402,7 +2396,7 @@
         const chunk = this.chunks[c];
         const chunkZ = chunk.group.position.z;
 
-        // Skip chunks far away
+        
         if (Math.abs(chunkZ - pZ) > CONFIG.CHUNK_LENGTH) continue;
 
         for (let i = chunk.items.length - 1; i >= 0; i--) {
@@ -2417,20 +2411,20 @@
 
           const itemType = item.userData.type;
 
-          // 1. COLLECTIBLES & POWER-UPS
+          
           if (itemType === 'laddu' || itemType === 'magnet' || itemType === 'boost') {
-            // Magnet pull effect
+            
             if (itemType === 'laddu' && this.magnetTimer > 0) {
               const distToPlayer = Math.hypot(dx, dz);
               if (distToPlayer < CONFIG.MAGNET_RADIUS) {
-                // Smoothly home in towards Bheem
+                
                 item.position.x += (pX - itemWorldX) * 0.15;
                 item.position.y += (pY + 0.8 - itemWorldY) * 0.15;
                 item.position.z += (pZ - itemWorldZ) * 0.15;
               }
             }
 
-            // Collection trigger
+            
             if (distXZ < 1.1 && Math.abs(pY + 0.8 - itemWorldY) < 1.4) {
               if (itemType === 'laddu') {
                 this.laddus++;
@@ -2446,37 +2440,37 @@
                 this.triggerScreenShake(0.4);
               }
 
-              // Remove collected item
+              
               chunk.group.remove(item);
               chunk.items.splice(i, 1);
               continue;
             }
           }
 
-          // 2. OBSTACLES (Logs, Branches, Boulders)
+          
           else if (itemType === 'jump_hurdle' || itemType === 'slide_hurdle' || itemType === 'block_hurdle') {
             const data = item.userData;
             const xTolerance = (data.width * 0.5) + playerRadius * 0.7;
             const zTolerance = (data.depth * 0.5) + playerRadius * 0.7;
 
-            // Check AABB overlap in X and Z
+            
             if (Math.abs(dx) < xTolerance && Math.abs(dz) < zTolerance) {
               const obsYMin = itemWorldY + data.hitYMin;
               const obsYMax = itemWorldY + data.hitYMax;
 
-              // Check vertical overlap
+              
               const hasVerticalCollision = (playerBottomY < obsYMax) && (playerTopY > obsYMin);
 
               if (hasVerticalCollision) {
                 if (isBoosted) {
-                  // SMASH THROUGH OBSTACLE!
+                  
                   this.sound.playSmash();
                   this.triggerScreenShake(0.5);
                   this.particles.emitSmashDebris(itemWorldX, itemWorldY + 0.5, itemWorldZ);
                   chunk.group.remove(item);
                   chunk.items.splice(i, 1);
                 } else {
-                  // Crash and Game Over!
+                  
                   this.gameOver();
                   return;
                 }
@@ -2487,9 +2481,7 @@
       }
     }
 
-    // ------------------------------------------------------------------------
-    // ANIMATION & FRAME LOOP
-    // ------------------------------------------------------------------------
+    
     animate() {
       requestAnimationFrame(this.animate);
 
@@ -2506,20 +2498,24 @@
     }
 
     updateGameplay(delta, time) {
-      // 1. Speed & Distance Progression
-      const currentBoostMult = this.boostTimer > 0 ? 1.65 : 1.0;
-      this.speed = Math.min(this.speed + CONFIG.ACCELERATION * delta, CONFIG.MAX_SPEED);
+      const basePace = CONFIG.BASE_SPEED * this.speedMultiplier;
+      const distanceProgression = Math.min(6.0, (this.distance / 1000) * 1.5) * this.speedMultiplier;
+      const maxCap = CONFIG.MAX_SPEED_CAP * this.speedMultiplier;
+      this.speed = Math.min(basePace + distanceProgression, maxCap);
+      const currentBoostMult = this.boostTimer > 0 ? 1.5 : 1.0;
       const effectiveSpeed = this.speed * currentBoostMult;
       
       const distTravelled = effectiveSpeed * delta;
       this.distance += distTravelled;
-      this.playerPos.z -= distTravelled; // Running along -Z
-      this.difficulty = 1.0 + (this.distance / 300);
+      this.playerPos.z -= distTravelled;
+      this.difficulty = 1.0 + (this.distance / 500);
 
-      // 2. Lateral Lane Interpolation (Smooth Spring Lerp)
+      this.checkMilestones();
+
+      
       this.playerPos.x += (this.targetLaneX - this.playerPos.x) * Math.min(delta * 14.0, 1.0);
 
-      // 3. Jump Physics & Gravity
+      
       if (this.isJumping) {
         this.playerPos.y += this.playerVelocityY * delta;
         this.playerVelocityY += CONFIG.GRAVITY * delta;
@@ -2534,7 +2530,7 @@
         }
       }
 
-      // 4. Slide Duration
+      
       if (this.isSliding) {
         this.slideTimer -= delta;
         if (Math.random() < 0.4) {
@@ -2545,7 +2541,7 @@
         }
       }
 
-      // Footstep audio cadence while running on ground
+      
       if (!this.isJumping && !this.isSliding) {
         this.stepTimer += delta * effectiveSpeed * 0.4;
         if (this.stepTimer > 1.0) {
@@ -2555,66 +2551,70 @@
         }
       }
 
-      // 5. Update Power-up Timers & Visuals
+      
       if (this.magnetTimer > 0) {
         this.magnetTimer -= delta;
-        this.ui.magnetContainer.classList.remove('hidden');
-        this.ui.magnetFill.style.width = `${(this.magnetTimer / CONFIG.MAGNET_DURATION) * 100}%`;
-        this.ui.magnetText.innerText = `${Math.ceil(this.magnetTimer)}s`;
+        if (this.ui.magnetContainer) {
+          this.ui.magnetContainer.classList.remove('hidden');
+          this.ui.magnetFill.style.width = `${(this.magnetTimer / CONFIG.MAGNET_DURATION) * 100}%`;
+          this.ui.magnetText.innerText = `${Math.ceil(this.magnetTimer)}s`;
+        }
         this.bheemRig.auraMat.color.setHex(0x00E5FF);
         this.bheemRig.auraMat.opacity = 0.8;
       } else {
-        this.ui.magnetContainer.classList.add('hidden');
+        if (this.ui.magnetContainer) this.ui.magnetContainer.classList.add('hidden');
       }
 
       if (this.boostTimer > 0) {
         this.boostTimer -= delta;
-        this.ui.boostContainer.classList.remove('hidden');
-        this.ui.boostFill.style.width = `${(this.boostTimer / CONFIG.BOOST_DURATION) * 100}%`;
-        this.ui.boostText.innerText = `${Math.ceil(this.boostTimer)}s`;
-        this.ui.speedFx.classList.add('active');
+        if (this.ui.boostContainer) {
+          this.ui.boostContainer.classList.remove('hidden');
+          this.ui.boostFill.style.width = `${(this.boostTimer / CONFIG.BOOST_DURATION) * 100}%`;
+          this.ui.boostText.innerText = `${Math.ceil(this.boostTimer)}s`;
+        }
+        if (this.ui.speedFx) this.ui.speedFx.classList.add('active');
         this.bheemRig.auraMat.color.setHex(0xFF3D00);
         this.bheemRig.auraMat.opacity = 0.9;
       } else {
-        this.ui.boostContainer.classList.add('hidden');
-        this.ui.speedFx.classList.remove('active');
+        if (this.ui.boostContainer) this.ui.boostContainer.classList.add('hidden');
+        if (this.ui.speedFx) this.ui.speedFx.classList.remove('active');
         if (this.magnetTimer <= 0) {
           this.bheemRig.auraMat.opacity = 0.0;
         }
       }
 
-      // Dynamic Camera FOV Zoom for Speed Rush
+      
       const targetFov = this.boostTimer > 0 ? CONFIG.FOV_BOOST : CONFIG.FOV_NORMAL;
       this.camera.fov += (targetFov - this.camera.fov) * delta * 4.0;
       this.camera.updateProjectionMatrix();
 
-      // 6. Check Collisions & Gather Collectibles
+      
       this.checkCollisions();
 
-      // 7. Stream / Recycle Chunks Ahead
+      
       this.updateChunks();
 
-      // 8. Animate Chhota Bheem Rig
+      
       this.animateCharacterRig(delta, effectiveSpeed);
 
-      // 9. Update Particles & Atmospheric FX
+      
       this.particles.update(delta);
       this.particles.updateFireflies(this.playerPos.z, delta, time);
 
-      // 10. Smooth Dynamic Follow Camera with Shake
+      
       this.updateCamera(delta);
 
-      // 11. Update HUD Elements
+      
       this.updateHUD(effectiveSpeed);
     }
 
-    // Stream & recycle chunks seamlessly
+    
     updateChunks() {
       for (let i = 0; i < this.chunks.length; i++) {
         const chunk = this.chunks[i];
-        // If chunk is past behind the player, recycle it ahead of the leading chunk
+        
         if (chunk.group.position.z > this.playerPos.z + CONFIG.CHUNK_LENGTH * 1.5) {
-          // Find the furthest chunk ahead (minimum Z)
+          
           let minZ = 0;
           for (let k = 0; k < this.chunks.length; k++) {
             if (this.chunks[k].group.position.z < minZ) {
@@ -2625,7 +2625,7 @@
           chunk.reposition(newZ, this.difficulty);
         }
 
-        // Animate collectibles (spinning laddus and hovering power-ups)
+        
         for (let k = 0; k < chunk.items.length; k++) {
           const item = chunk.items[k];
           if (item.userData && item.userData.rotSpeed) {
@@ -2641,46 +2641,45 @@
       }
     }
 
-    // Procedural Character Animation Rig
+    
     animateCharacterRig(delta, runSpeed) {
       const rig = this.bheemRig;
       rig.root.position.copy(this.playerPos);
       rig.updateAnimation(this.isJumping, this.isSliding, this.state === 'GAMEOVER', delta, runSpeed, this.playerPos.y);
     }
 
-    // Dynamic Third-Person Follow Camera with Physics Shake
+    
     updateCamera(delta) {
-      // Base camera follow position
+      
       const targetCamX = this.playerPos.x * 0.65;
       const targetCamY = this.playerPos.y + this.cameraBasePos.y;
       const targetCamZ = this.playerPos.z + this.cameraBasePos.z;
 
-      // Smooth lag dampening
+      
       this.camera.position.x += (targetCamX - this.camera.position.x) * delta * 8.0;
       this.camera.position.y += (targetCamY - this.camera.position.y) * delta * 6.0;
       this.camera.position.z += (targetCamZ - this.camera.position.z) * delta * 12.0;
 
-      // Apply screen shake
+      
       if (this.cameraShakeIntensity > 0.001) {
         this.camera.position.x += (Math.random() - 0.5) * this.cameraShakeIntensity;
         this.camera.position.y += (Math.random() - 0.5) * this.cameraShakeIntensity;
         this.cameraShakeIntensity -= this.cameraShakeIntensity * this.cameraShakeDecay * delta;
       }
 
-      // Look at Bheem's chest/head with forward glance
+      
       this.cameraTarget.set(this.playerPos.x * 0.5, this.playerPos.y + 1.6, this.playerPos.z - 5);
       this.camera.lookAt(this.cameraTarget);
 
-      // Keep dynamic directional sun and character light centered on player
+      
       this.sunLight.position.set(this.playerPos.x + 12, 22, this.playerPos.z + 10);
       this.sunLight.target.position.set(this.playerPos.x, 0, this.playerPos.z - 8);
       this.charLight.position.set(this.playerPos.x, this.playerPos.y + 3.0, this.playerPos.z + 2.0);
     }
 
-    // Idle showcase scene when in Start Menu or Game Over
+    
     updateIdleScene(delta, time) {
-      // Cinematic showcase camera focusing on Chhota Bheem's face and character
-      // Starts from front-facing angle (Math.PI since Bheem faces -Z) and sways smoothly across 3/4 hero view
+      
       const radius = 5.2;
       const angle = Math.PI + Math.sin(time * 0.35) * 0.60;
       this.camera.position.set(
@@ -2690,7 +2689,7 @@
       );
       this.camera.lookAt(this.playerPos.x, 1.40, this.playerPos.z);
 
-      // Idle posture
+      
       this.bheemRig.root.position.copy(this.playerPos);
       this.bheemRig.updateAnimation(false, false, this.state === 'GAMEOVER', delta, 0, this.playerPos.y);
 
@@ -2698,15 +2697,69 @@
       this.particles.updateFireflies(this.playerPos.z, delta, time);
     }
 
-    // Update HUD Values
-    updateHUD(currentSpeed) {
-      this.ui.distance.innerText = Math.floor(this.distance);
-      this.ui.laddus.innerText = this.laddus;
-      const speedMult = (currentSpeed / CONFIG.BASE_SPEED).toFixed(1);
-      this.ui.multiplier.innerText = `${speedMult}x SPEED`;
+    
+    checkMilestones() {
+      const currentMeters = Math.floor(this.distance);
+      const fixedMilestones = [100, 250, 300, 350, 500, 1000];
+      for (let i = 0; i < fixedMilestones.length; i++) {
+        const m = fixedMilestones[i];
+        if (currentMeters >= m && !this.achievedMilestones.has(m)) {
+          this.achievedMilestones.add(m);
+          this.showMilestone(m);
+          return;
+        }
+      }
+      if (currentMeters > 1000) {
+        const interval = 250;
+        const intervalMilestone = Math.floor(currentMeters / interval) * interval;
+        if (intervalMilestone > 1000 && !this.achievedMilestones.has(intervalMilestone)) {
+          this.achievedMilestones.add(intervalMilestone);
+          this.showMilestone(intervalMilestone);
+        }
+      }
     }
 
-    // Handle Window Resizing
+    showMilestone(meters) {
+      if (!this.ui.milestoneToast) return;
+      if (this.milestoneToastTimer) {
+        clearTimeout(this.milestoneToastTimer);
+      }
+      this.ui.milestoneToast.innerHTML = `
+        <div class="milestone-card">
+          <div class="milestone-tag">🏆 MILESTONE UNLOCKED</div>
+          <div class="milestone-msg">Congratulations! You achieved ${meters} Meters!</div>
+        </div>
+      `;
+      this.ui.milestoneToast.classList.remove('hidden', 'fading');
+      this.ui.milestoneToast.classList.add('active');
+      this.sound.playPowerUp();
+      this.triggerScreenFlash('flash-gold');
+
+      this.milestoneToastTimer = setTimeout(() => {
+        if (this.ui.milestoneToast) {
+          this.ui.milestoneToast.classList.remove('active');
+          this.ui.milestoneToast.classList.add('fading');
+          setTimeout(() => {
+            if (this.ui.milestoneToast) {
+              this.ui.milestoneToast.classList.remove('fading');
+              this.ui.milestoneToast.classList.add('hidden');
+            }
+          }, 400);
+        }
+      }, 2500);
+    }
+
+    updateHUD(currentSpeed) {
+      if (this.ui.distance) this.ui.distance.innerText = Math.floor(this.distance);
+      if (this.ui.highScore) this.ui.highScore.innerText = this.highScore;
+      if (this.ui.laddus) this.ui.laddus.innerText = this.laddus;
+      if (this.ui.multiplier) {
+        const speedMult = (currentSpeed / (CONFIG.BASE_SPEED * this.speedMultiplier)).toFixed(1);
+        this.ui.multiplier.innerText = `${speedMult}x SPEED`;
+      }
+    }
+
+    
     onWindowResize() {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -2715,13 +2768,13 @@
       this.renderer.setSize(width, height);
     }
 
-    // Render Scene to Screen
+    
     render() {
       this.renderer.render(this.scene, this.camera);
     }
   }
 
-  // Launch Game Engine once DOM is ready
+  
   window.addEventListener('DOMContentLoaded', () => {
     new ChhotaBheemGame();
   });

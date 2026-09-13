@@ -2017,6 +2017,9 @@
 
       const onTouchStart = (e) => {
         if (!e.touches || e.touches.length === 0) return;
+        if (e.target && e.target.closest && (e.target.closest('#screen-start') || e.target.closest('#hud-controls-corner') || e.target.closest('.modal-card') || e.target.closest('.hud-controls-corner'))) {
+          return;
+        }
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
         touchStartTime = performance.now();
@@ -2116,6 +2119,7 @@
         btnPause: document.getElementById('btn-pause'),
         btnRestart: document.getElementById('btn-restart'),
         btnPauseRestart: document.getElementById('btn-pause-restart'),
+        btnHome: document.getElementById('btn-home'),
         btnSoundToggle: document.getElementById('btn-sound-toggle'),
         soundIcon: document.getElementById('sound-icon'),
         btnQuality: document.getElementById('btn-quality'),
@@ -2197,6 +2201,18 @@
       this.ui.btnRestart.addEventListener('touchend', onRestartClick);
       this.ui.btnPauseRestart.addEventListener('click', onRestartClick);
       this.ui.btnPauseRestart.addEventListener('touchend', onRestartClick);
+
+      if (this.ui.btnHome) {
+        const onHomeClick = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          this.goToHome();
+        };
+        this.ui.btnHome.addEventListener('click', onHomeClick);
+        this.ui.btnHome.addEventListener('touchend', onHomeClick);
+      }
 
       this.ui.btnSoundToggle.addEventListener('click', () => {
         this.sound.init();
@@ -2282,6 +2298,10 @@
       this.ui.hud.classList.remove('hidden');
       this.ui.speedFx.classList.remove('active');
 
+      if (this.ui.btnHome) {
+        this.ui.btnHome.classList.remove('hidden');
+      }
+
       this.state = 'PLAYING';
       this.score = 0;
       this.distance = 0;
@@ -2309,7 +2329,6 @@
       this.magnetTimer = 0;
       this.boostTimer = 0;
 
-      
       for (let i = 0; i < this.chunks.length; i++) {
         const z = -i * CONFIG.CHUNK_LENGTH;
         this.chunks[i].reposition(z, 1.0);
@@ -2339,6 +2358,94 @@
       this.clock.getDelta(); 
     }
 
+    goToHome() {
+      if (this.gameOverTimeout) {
+        clearTimeout(this.gameOverTimeout);
+        this.gameOverTimeout = null;
+      }
+      if (this.milestoneToastTimer) {
+        clearTimeout(this.milestoneToastTimer);
+        this.milestoneToastTimer = null;
+      }
+
+      this.state = 'TITLE';
+      this.score = 0;
+      this.distance = 0;
+      this.laddus = 0;
+      this.difficulty = 1.0;
+      this.speed = CONFIG.BASE_SPEED * this.speedMultiplier;
+      this.achievedMilestones.clear();
+
+      this.currentLane = 1;
+      this.targetLaneX = CONFIG.LANES[1];
+      this.playerPos.set(0, 0, 0);
+      this.playerVelocityY = 0;
+      this.isJumping = false;
+      this.isSliding = false;
+      this.slideTimer = 0;
+      this.runAnimTime = 0;
+      this.stepTimer = 0;
+      this.magnetTimer = 0;
+      this.boostTimer = 0;
+      this.cameraShakeIntensity = 0;
+
+      if (this.bheemRig && this.bheemRig.auraMat) {
+        this.bheemRig.auraMat.opacity = 0.0;
+      }
+
+      for (let i = 0; i < this.chunks.length; i++) {
+        const z = -i * CONFIG.CHUNK_LENGTH;
+        this.chunks[i].reposition(z, 1.0);
+        if (i === 0) this.chunks[i].clearItems();
+      }
+
+      this.camera.fov = CONFIG.FOV_NORMAL;
+      this.camera.updateProjectionMatrix();
+
+      this.sound.duckBGM(false);
+
+      if (this.ui.speedFx) this.ui.speedFx.classList.remove('active');
+      if (this.ui.screenFlash) this.ui.screenFlash.className = '';
+      if (this.ui.milestoneToast) {
+        this.ui.milestoneToast.classList.add('hidden');
+        this.ui.milestoneToast.classList.remove('active', 'fading');
+      }
+      if (this.ui.magnetContainer) this.ui.magnetContainer.classList.add('hidden');
+      if (this.ui.boostContainer) this.ui.boostContainer.classList.add('hidden');
+
+      this.ui.hud.style.display = 'none';
+      this.ui.hud.classList.remove('active');
+      this.ui.hud.classList.add('hidden');
+
+      this.ui.screenPause.style.display = 'none';
+      this.ui.screenPause.classList.remove('active');
+      this.ui.screenPause.classList.add('hidden');
+
+      this.ui.screenGameOver.style.display = 'none';
+      this.ui.screenGameOver.classList.remove('active');
+      this.ui.screenGameOver.classList.add('hidden');
+
+      this.ui.screenStart.style.display = 'flex';
+      this.ui.screenStart.classList.remove('hidden');
+      this.ui.screenStart.classList.add('active');
+
+      if (this.ui.btnHome) {
+        this.ui.btnHome.classList.add('hidden');
+      }
+
+      if (this.ui.highScore) {
+        this.ui.highScore.innerText = this.highScore;
+      }
+
+      const speedBtns = document.querySelectorAll('.speed-btn');
+      speedBtns.forEach(btn => {
+        btn.classList.toggle('active', parseFloat(btn.dataset.speed) === this.speedMultiplier);
+      });
+      if (this.ui.speedSelect) {
+        this.ui.speedSelect.value = this.speedMultiplier.toString();
+      }
+    }
+
     gameOver(reason = 'obstacle') {
       if (this.state === 'GAMEOVER') return; 
       this.state = 'GAMEOVER';
@@ -2352,7 +2459,6 @@
         localStorage.setItem('bheem_high_score', this.highScore.toString());
       }
 
-      
       const totalScore = Math.floor(this.distance + this.laddus * 10);
       this.ui.goDistance.innerText = `${Math.floor(this.distance)} m`;
       this.ui.goLaddus.innerText = this.laddus;
@@ -2365,16 +2471,17 @@
         this.ui.goBadge.classList.add('hidden');
       }
 
-      
       if (this.gameOverTimeout) clearTimeout(this.gameOverTimeout);
       this.gameOverTimeout = setTimeout(() => {
-        
         if (this.state === 'GAMEOVER') {
           this.ui.hud.classList.add('hidden');
           this.ui.screenGameOver.classList.remove('hidden');
           this.ui.screenGameOver.classList.add('active');
           this.ui.screenGameOver.style.display = 'flex';
           this.ui.speedFx.classList.remove('active');
+          if (this.ui.btnHome) {
+            this.ui.btnHome.classList.remove('hidden');
+          }
         }
       }, 500);
     }
